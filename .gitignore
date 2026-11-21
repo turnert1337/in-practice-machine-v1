@@ -1,0 +1,4 @@
+.DS_Store
+*.m4a
+machinery/podcast_assets/music/
+scripts/recordings/*.webm.tmp

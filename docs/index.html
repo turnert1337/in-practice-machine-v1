@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>In Practice Machine</title>
+<style>
+:root{
+  --bg:#f6f4ef; --panel:#ffffff; --fg:#23211c; --muted:#6f6a5e; --line:#e3dfd4;
+  --accent:#b4552d; --accent-soft:#f3e3da; --green:#3d7a4e; --amber:#b58020; --idle:#9a958a;
+  --mono:"SF Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#17160f; --panel:#201e16; --fg:#ece8dd; --muted:#9b9587; --line:#36332a;
+  --accent:#e07a4a; --accent-soft:#3a2a20; --green:#6fb983; --amber:#d9a84e; --idle:#6b665c;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#17160f; --panel:#201e16; --fg:#ece8dd; --muted:#9b9587; --line:#36332a;
+  --accent:#e07a4a; --accent-soft:#3a2a20; --green:#6fb983; --amber:#d9a84e; --idle:#6b665c;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 Charter,Georgia,serif;padding:0 16px 80px}
+.wrap{max-width:880px;margin:0 auto}
+header{padding:28px 0 10px}
+h1{font-size:1.7rem;margin:0;letter-spacing:.2px}
+h1 .v{color:var(--accent);font-family:var(--mono);font-size:.9rem;vertical-align:super}
+.sub{color:var(--muted);margin:4px 0 0;font-size:.95rem}
+nav{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 6px;position:sticky;top:0;background:var(--bg);padding:10px 0;z-index:5;border-bottom:1px solid var(--line)}
+nav a{font-family:var(--mono);font-size:.78rem;text-decoration:none;color:var(--fg);border:1px solid var(--line);border-radius:99px;padding:5px 11px;background:var(--panel)}
+nav a:hover{border-color:var(--accent);color:var(--accent)}
+h2{font-size:1.15rem;margin:40px 0 12px;border-bottom:2px solid var(--accent);display:inline-block;padding-bottom:2px}
+h3{font-size:1rem;margin:20px 0 8px}
+section{scroll-margin-top:64px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:12px 0}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th,td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.tscroll{overflow-x:auto}
+.mono{font-family:var(--mono);font-size:.82rem}
+.muted{color:var(--muted)}
+.pill{font-family:var(--mono);font-size:.7rem;border-radius:99px;padding:2px 9px;white-space:nowrap}
+.done{background:var(--green);color:#fff}
+.wait{background:var(--amber);color:#fff}
+.todo{background:var(--idle);color:#fff}
+.gate{background:var(--accent);color:#fff}
+.map{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:14px 0}
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.stage b{display:block;font-size:.83rem;margin-bottom:5px}
+.btn{display:inline-block;font-family:var(--mono);font-size:.78rem;border:1px solid var(--accent);color:var(--accent);background:none;border-radius:6px;padding:6px 12px;text-decoration:none;cursor:pointer}
+.btn:hover{background:var(--accent-soft)}
+.btn.primary{background:var(--accent);color:#fff}
+blockquote.vo{border-left:3px solid var(--accent);margin:10px 0;padding:6px 14px;background:var(--accent-soft);border-radius:0 8px 8px 0;font-size:.95rem}
+audio{width:100%;margin-top:6px}
+.rec-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding:9px 0}
+.rec-row:last-child{border-bottom:none}
+.rec-row .name{font-family:var(--mono);font-size:.8rem;min-width:9em}
+.rec-state{font-family:var(--mono);font-size:.74rem;color:var(--muted)}
+#anim-stage{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:10px;height:340px;overflow:hidden}
+#anim-stage svg{width:100%;height:100%}
+.anim-cap{position:absolute;left:0;right:0;bottom:0;padding:10px 16px;background:linear-gradient(transparent,var(--bg));font-size:.9rem;min-height:3.2em}
+.anim-cap .t{font-family:var(--mono);font-size:.72rem;color:var(--accent)}
+.agent-dot{opacity:0;transition:opacity .6s}
+.flow{opacity:0;transition:opacity .6s}
+details{margin:8px 0}
+summary{cursor:pointer;font-weight:bold;font-size:.95rem}
+footer{margin-top:60px;border-top:1px solid var(--line);padding-top:14px;color:var(--muted);font-size:.85rem}
+a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>In Practice Machine <span class="v">v1</span></h1>
+  <p class="sub">Session recorded 2026-11-21 · Jeremy &amp; Turner · machine takes the tape in, stages everything for posting</p>
+</header>
+
+<nav>
+  <a href="#map">Progress</a><a href="#episodes">Episodes</a><a href="#scripts">Scripts + Recorder</a>
+  <a href="#music">Music</a><a href="#snippets">X Snippets</a><a href="#animation">Agent HR</a><a href="#reports">Reports</a>
+</nav>
+
+<section id="map">
+<h2>Progress toward post-ready</h2>
+<div class="map">
+  <div class="stage"><b>Ingest</b><span class="pill done">done</span><div class="muted" style="font-size:.78rem;margin-top:5px">145-min transcript pulled &amp; scanned</div></div>
+  <div class="stage"><b>Breakdown</b><span class="pill done">done</span><div class="muted" style="font-size:.78rem;margin-top:5px">28 segments mapped, 8 Kit Kat directives caught</div></div>
+  <div class="stage"><b>Reports</b><span class="pill done">done</span><div class="muted" style="font-size:.78rem;margin-top:5px">feed damage + proof of life answered</div></div>
+  <div class="stage"><b>Cut plan ×2</b><span class="pill wait">review</span><div class="muted" style="font-size:.78rem;margin-top:5px">two 20-min episodes await thumbs</div></div>
+  <div class="stage"><b>VO scripts</b><span class="pill wait">review</span><div class="muted" style="font-size:.78rem;margin-top:5px">8 takes drafted for Turner to read</div></div>
+  <div class="stage"><b>Intro music</b><span class="pill wait">pick one</span><div class="muted" style="font-size:.78rem;margin-top:5px">3 originals below</div></div>
+  <div class="stage"><b>Riverside cuts</b><span class="pill todo">queued</span><div class="muted" style="font-size:.78rem;margin-top:5px">starts when the cut plan gets a yes</div></div>
+  <div class="stage"><b>X snippets</b><span class="pill wait">Jeremy</span><div class="muted" style="font-size:.78rem;margin-top:5px">14 candidates, 12 already cut in Riverside</div></div>
+  <div class="stage"><b>Publish</b><span class="pill gate">gated</span><div class="muted" style="font-size:.78rem;margin-top:5px">Turner's click, by design</div></div>
+</div>
+<p class="muted" style="font-size:.88rem">To approve or change anything: <a href="https://github.com/turnert1337/in-practice-machine-v1/issues/new" target="_blank" rel="noopener">file an issue</a> (agents on both sides read them) — or just edit the file and push; this page redeploys on merge to <span class="mono">main</span>.</p>
+</section>
+
+<section id="episodes">
+<h2>Two episodes from one Saturday</h2>
+<p>Per the mandate on tape (59:36): cap at ~20 minutes, one session = two weeks of podcast. Substack connection dropped this round — outros carry a general plug only.</p>
+
+<div class="card">
+<h3>Episode A — <i>An Army of PhD Interns</i> <span class="muted">(est. 19:40)</span></h3>
+<div class="tscroll"><table>
+<tr><th>Chapter</th><th>Raw source</th><th>Target</th></tr>
+<tr><td>Scripted intro (VO A-1, music under)</td><td>—</td><td>0:40</td></tr>
+<tr><td>1 · Naming the producer (dog-name theory → Kit Kat)</td><td>19:49–22:35</td><td>2:30</td></tr>
+<tr><td>2 · Agent HR, the how (registry, charters, org-chart loop, midnight report)</td><td>30:04–39:21</td><td>7:00</td></tr>
+<tr><td>3 · The army &amp; delegation (Lego bricks, 68 PhD contractors)</td><td>41:06–45:13</td><td>3:30</td></tr>
+<tr><td>4 · The 12,000-subagent study (refinery ops room → persona psychology)</td><td>45:13–50:30</td><td>4:30</td></tr>
+<tr><td>Outro (VO A-4)</td><td>—</td><td>0:30</td></tr>
+</table></div>
+<a class="btn" target="_blank" rel="noopener" href="https://github.com/turnert1337/in-practice-machine-v1/issues/new?title=Episode%20A%3A%20approved&body=Cut%20plan%20approved%20as%20written.%20Notes%3A%20">✓ approve</a>
+<a class="btn" target="_blank" rel="noopener" href="https://github.com/turnert1337/in-practice-machine-v1/issues/new?title=Episode%20A%3A%20changes&body=Change%20requests%3A%20">request changes</a>
+</div>
+
+<div class="card">
+<h3>Episode B — <i>Rocket Ship, Bubble, Playtime</i> <span class="muted">(est. 19:30)</span></h3>
+<div class="tscroll"><table>
+<tr><th>Chapter</th><th>Raw source</th><th>Target</th></tr>
+<tr><td>Scripted intro (VO B-1, music under)</td><td>—</td><td>0:40</td></tr>
+<tr><td>1 · Rocket ship or bubble (IPO, enshittification, open-source frontier)</td><td>82:10–94:15</td><td>8:00</td></tr>
+<tr><td>2 · Not coaching — measurement (decision loop, chief of staff, doctrine)</td><td>106:51–111:53</td><td>5:00</td></tr>
+<tr><td>3 · Playtime (Play Lab, broke-a-rule, Google 20% time)</td><td>117:24–124:44</td><td>5:00</td></tr>
+<tr><td>Outro (VO B-4)</td><td>—</td><td>0:30</td></tr>
+</table></div>
+<a class="btn" target="_blank" rel="noopener" href="https://github.com/turnert1337/in-practice-machine-v1/issues/new?title=Episode%20B%3A%20approved&body=Cut%20plan%20approved%20as%20written.%20Notes%3A%20">✓ approve</a>
+<a class="btn" target="_blank" rel="noopener" href="https://github.com/turnert1337/in-practice-machine-v1/issues/new?title=Episode%20B%3A%20changes&body=Change%20requests%3A%20">request changes</a>
+<p class="muted" style="font-size:.85rem">Full chapter-by-chapter detail with trim notes: <a href="https://github.com/turnert1337/in-practice-machine-v1/blob/main/reports/04_two_episode_cut_plan.md" target="_blank" rel="noopener">reports/04_two_episode_cut_plan.md</a></p>
+</div>
+</section>
+
+<section id="scripts">
+<h2>VO scripts — Turner reads, machine splices</h2>
+<p>Eight takes. Hit <b>record</b>, read the block, hit stop, listen back, then <b>save</b> — the file downloads named correctly; drop it in <span class="mono">scripts/recordings/</span> (or just tell the agent and it'll collect it). Flat and conversational; these sit between live tape.</p>
+
+<div class="card" id="recorder">
+  <div class="rec-row"><span class="name">A-1 · intro</span><button class="btn rec" data-take="A-1_intro">● record</button><span class="rec-state"></span></div>
+  <blockquote class="vo">This is In Practice, with Jeremy and Turner. Two guys who run small armies of AI agents, comparing notes every couple of weeks.<br><br>This episode: we hire a producer and name it like a dog. Jeremy staffs a human resources department where nobody's human. And I tell the story of the time I ran twelve thousand agents to reproduce a psychology study.<br><br>Also — we heard you on the intro music. It's been toned down. You're welcome.</blockquote>
+  <div class="rec-row"><span class="name">A-2 · bridge</span><button class="btn rec" data-take="A-2_bridge">● record</button><span class="rec-state"></span></div>
+  <blockquote class="vo">Last episode, somebody asked how you'd actually build an agent HR department. Jeremy went first, since he's got sixty-eight employees and none of them have a pulse.</blockquote>
+  <div class="rec-row"><span class="name">A-3 · bridge</span><button class="btn rec" data-take="A-3_bridge">● record</button><span class="rec-state"></span></div>
+  <blockquote class="vo">From one department to the whole org chart — why would anyone want hundreds of these things in the first place?</blockquote>
+  <div class="rec-row"><span class="name">A-4 · outro</span><button class="btn rec" data-take="A-4_outro">● record</button><span class="rec-state"></span></div>
+  <blockquote class="vo">That's the first half of this session — the second drops automatically next Saturday. Which is sort of the whole point of the machine we keep talking about.<br><br>If you want the longer written version of any of this, I write at Lossy on Substack, when I write.<br><br>In Practice, with Jeremy and Turner. I'm Turner.</blockquote>
+  <div class="rec-row"><span class="name">B-1 · intro</span><button class="btn rec" data-take="B-1_intro">● record</button><span class="rec-state"></span></div>
+  <blockquote class="vo">This is In Practice, with Jeremy and Turner — second episode from the same Saturday morning, because one conversation turned out to be two weeks of podcast.<br><br>This one's about money and trust. Anthropic went public, and we both run businesses on their subscription, so: rocket ship or bubble? Then — why managing agents stops being coaching and turns into measurement. And what happened when Jeremy gave his agents recess.</blockquote>
+  <div class="rec-row"><span class="name">B-2 · bridge</span><button class="btn rec" data-take="B-2_bridge">● record</button><span class="rec-state"></span></div>
+  <blockquote class="vo">Okay, enough market talk. Back on the ground: how do you actually come to trust a system you didn't watch build itself?</blockquote>
+  <div class="rec-row"><span class="name">B-3 · bridge</span><button class="btn rec" data-take="B-3_bridge">● record</button><span class="rec-state"></span></div>
+  <blockquote class="vo">And then there's the part of the org chart nobody budgets for. Jeremy built a lab to study what his agents do when you tell them to go play.</blockquote>
+  <div class="rec-row"><span class="name">B-4 · outro</span><button class="btn rec" data-take="B-4_outro">● record</button><span class="rec-state"></span></div>
+  <blockquote class="vo">That's the session. We record again in two weeks, and the machine that cut this episode will cut that one too — slightly better, if it's doing its job.<br><br>Longer written versions live at Lossy on Substack. In Practice, with Jeremy and Turner. I'm Turner.</blockquote>
+</div>
+</section>
+
+<section id="music">
+<h2>Intro music — three options, less sexy</h2>
+<p>Original instrumentals synthesized for this repo (the previous vocal intro got "too saucy" feedback — these are vocal-free and sit under narration). Pick one, or send all three back.</p>
+<div class="card">
+  <h3>Option 1 · <i>Workbench</i> <span class="muted">— warm marimba-ish pluck over pads, 92 BPM</span></h3>
+  <audio controls preload="none" src="../music/option_1_workbench.mp3"></audio>
+  <a class="btn" target="_blank" rel="noopener" href="https://github.com/turnert1337/in-practice-machine-v1/issues/new?title=Intro%20music%3A%20pick%20Option%201%20Workbench&body=Use%20option_1_workbench.mp3%20under%20the%20intros.">pick this one</a>
+</div>
+<div class="card">
+  <h3>Option 2 · <i>Fieldnotes</i> <span class="muted">— plucked-string fingerpicking + shaker, 104 BPM</span></h3>
+  <audio controls preload="none" src="../music/option_2_fieldnotes.mp3"></audio>
+  <a class="btn" target="_blank" rel="noopener" href="https://github.com/turnert1337/in-practice-machine-v1/issues/new?title=Intro%20music%3A%20pick%20Option%202%20Fieldnotes&body=Use%20option_2_fieldnotes.mp3%20under%20the%20intros.">pick this one</a>
+</div>
+<div class="card">
+  <h3>Option 3 · <i>Relay</i> <span class="muted">— minimal electronic pulse + bell motif, 100 BPM</span></h3>
+  <audio controls preload="none" src="../music/option_3_relay.mp3"></audio>
+  <a class="btn" target="_blank" rel="noopener" href="https://github.com/turnert1337/in-practice-machine-v1/issues/new?title=Intro%20music%3A%20pick%20Option%203%20Relay&body=Use%20option_3_relay.mp3%20under%20the%20intros.">pick this one</a>
+</div>
+<p class="muted" style="font-size:.85rem">Fallback: Riverside's licensed library has intro beds (businessTech / educational / artsEntertainment, low &amp; high intensity) that drop straight onto the timeline — not previewable here, but one issue comment and the machine places one instead. Note: ElevenLabs music generation needs a paid plan (the account's on free tier), so these were synthesized locally; if the account upgrades, the machine re-renders real produced options on request.</p>
+</section>
+
+<section id="snippets">
+<h2>X snippet slate — 14 for Jeremy</h2>
+<p>Twelve are already cut by Riverside's magic editor — the links open the editable clip for restyle + export. Two are custom cuts worth making. <b>Caveat:</b> Jeremy's camera froze intermittently; scrub each clip once and fall back to audio-over-card where video is frozen.</p>
+<div class="card tscroll"><table>
+<tr><th>#</th><th>Clip</th><th>Len</th><th>Suggested caption</th></tr>
+<tr><td>1</td><td><a target="_blank" rel="noopener" href="https://riverside.com/editor/fdeb3d50-6a2e-44c8-8e91-a4f9f5efdb2e/6b01cbf78fbbe6fbae5e8dc0/preview">Two-Syllable Dog Name</a></td><td>0:38</td><td>We needed stage directions for our producer-agent mid-recording. So we named it like you'd name a dog.</td></tr>
+<tr><td>2</td><td><a target="_blank" rel="noopener" href="https://riverside.com/editor/fdeb3d50-6a2e-44c8-8e91-a4f9f5efdb2e/14655897e0723d978ddbedda/preview">Agent Apologizes in Reactor Mail</a></td><td>1:02</td><td>One of my agents apologized to another agent. Nobody told it to.</td></tr>
+<tr><td>3</td><td><a target="_blank" rel="noopener" href="https://riverside.com/editor/fdeb3d50-6a2e-44c8-8e91-a4f9f5efdb2e/242cf9c79fc5fb90b51eab36/preview">Rolls-Royce vs Model T</a></td><td>0:49</td><td>Everyone one-shots with the same model off the same assembly line. The tuning knobs are the moat.</td></tr>
+<tr><td>4</td><td><a target="_blank" rel="noopener" href="https://riverside.com/editor/fdeb3d50-6a2e-44c8-8e91-a4f9f5efdb2e/055a79883436a5201e42e456/preview">Authenticity in Podcasting</a></td><td>0:59</td><td>Yep, the intro music was a little too sexy. We're leaving it up.</td></tr>
+<tr><td>5</td><td><a target="_blank" rel="noopener" href="https://riverside.com/editor/fdeb3d50-6a2e-44c8-8e91-a4f9f5efdb2e/74b38b2a228ded833aa27e79/preview">A New Fundamental Skill</a></td><td>0:46</td><td>Working a computer used to be the fundamental skill. Managing your army of agents is next.</td></tr>
+<tr><td>6</td><td><a target="_blank" rel="noopener" href="https://riverside.com/editor/fdeb3d50-6a2e-44c8-8e91-a4f9f5efdb2e/f1a298d8d65522b47e65d9b1/preview">Rocket Ship or Bubble?</a></td><td>0:48</td><td>Anthropic IPO'd. Rocket ship or bubble? We took the question seriously.</td></tr>
+<tr><td>7</td><td><a target="_blank" rel="noopener" href="https://riverside.com/editor/fdeb3d50-6a2e-44c8-8e91-a4f9f5efdb2e/13a487eb9945e748fb8d6b9c/preview">Generalist vs Specialist</a></td><td>0:56</td><td>One agent that does everything, or 68 specialists? The shape of your work decides.</td></tr>
+<tr><td>8</td><td><a target="_blank" rel="noopener" href="https://riverside.com/editor/fdeb3d50-6a2e-44c8-8e91-a4f9f5efdb2e/1c90558bb80fb819b29fc7fb/preview">Delegating Resources</a></td><td>0:54</td><td>Delegation only works when you've already defined what a good decision looks like.</td></tr>
+<tr><td>9</td><td><a target="_blank" rel="noopener" href="https://riverside.com/editor/fdeb3d50-6a2e-44c8-8e91-a4f9f5efdb2e/eadffdbc9f4764388dd4cd02/preview">Data-Driven Decision Loop</a></td><td>1:00</td><td>Do I have the data for this decision? No? Then what data do I need to create? Run that loop forever.</td></tr>
+<tr><td>10</td><td><a target="_blank" rel="noopener" href="https://riverside.com/editor/fdeb3d50-6a2e-44c8-8e91-a4f9f5efdb2e/10589ecbdcc0426dc5508c1c/preview">Empowering with Mental Models</a></td><td>0:59</td><td>Don't hand people answers. Hand them the mental model and let them fish.</td></tr>
+<tr><td>11</td><td><a target="_blank" rel="noopener" href="https://riverside.com/editor/fdeb3d50-6a2e-44c8-8e91-a4f9f5efdb2e/27ac178e46282a23b1514ff8/preview">GTA 6: Open World</a></td><td>0:59</td><td>What does "playtime" mean for an AI agent? Same as GTA: an open world and no instructions.</td></tr>
+<tr><td>12</td><td><a target="_blank" rel="noopener" href="https://riverside.com/editor/fdeb3d50-6a2e-44c8-8e91-a4f9f5efdb2e/d47f335d008daa0392fc4c0e/preview">Automating Podcast Production</a></td><td>1:02</td><td>This podcast is produced by an agent we address by name, on tape, while recording.</td></tr>
+<tr><td>13</td><td>Custom: the 12,000-subagent study (cut 48:35–50:30)</td><td>~1:15</td><td>I reproduced a famous psychology study on AI personas. 250 agents per model, double-blind, 12,000 subagents.</td></tr>
+<tr><td>14</td><td>Custom: "KitKat's taking care of the slag" (cut 78:13–78:42)</td><td>~0:30</td><td>We're smelting raw conversation into ingots. The agent pulls the slag off the top.</td></tr>
+</table></div>
+<a class="btn" target="_blank" rel="noopener" href="https://github.com/turnert1337/in-practice-machine-v1/issues/new?title=Snippet%20slate%20feedback&body=Keep%3A%20%0ADrop%3A%20%0AAdd%3A%20">send feedback on the slate</a>
+</section>
+
+<section id="animation">
+<h2>The Agent Resources Department — animated</h2>
+<p>Per the Kit Kat directive at 55:32: the agent-HR sketch from this session as a click-to-play animation. Visuals follow the tape; the quotes are verbatim. (Audio pairing lands with the episode cut — for now the caption carries the line. Real audio of this chunk: <a target="_blank" rel="noopener" href="https://riverside.com/editor/fdeb3d50-6a2e-44c8-8e91-a4f9f5efdb2e/6b01c9f93418fa7b2da50e07/preview">the Riverside clip</a>.)</p>
+<div id="anim-stage">
+  <svg viewBox="0 0 800 300" aria-hidden="true">
+    <g id="g-registry">
+      <rect x="40" y="40" width="200" height="220" rx="10" fill="none" stroke="currentColor" stroke-dasharray="5 4" opacity=".5"/>
+      <text x="140" y="30" text-anchor="middle" font-size="13" fill="currentColor" opacity=".7">REGISTRY</text>
+    </g>
+    <g id="g-agents"></g>
+    <g id="g-charter" class="flow">
+      <rect x="330" y="60" width="150" height="80" rx="8" fill="none" stroke="currentColor"/>
+      <text x="405" y="88" text-anchor="middle" font-size="12" fill="currentColor">charter + budget</text>
+      <text x="405" y="108" text-anchor="middle" font-size="12" fill="currentColor">role + rubric</text>
+      <path d="M 250 120 L 322 100" stroke="currentColor" marker-end="url(#arr)"/>
+    </g>
+    <g id="g-verify" class="flow">
+      <circle cx="580" cy="100" r="42" fill="none" stroke="currentColor"/>
+      <text x="580" y="96" text-anchor="middle" font-size="11" fill="currentColor">verify the</text>
+      <text x="580" y="111" text-anchor="middle" font-size="11" fill="currentColor">org chart</text>
+      <path d="M 488 100 L 530 100" stroke="currentColor" marker-end="url(#arr)"/>
+      <path d="M 612 70 A 55 55 0 1 1 615 125" fill="none" stroke="currentColor" stroke-dasharray="4 4" marker-end="url(#arr)"/>
+    </g>
+    <g id="g-report" class="flow">
+      <rect x="520" y="185" width="230" height="75" rx="8" fill="none" stroke="currentColor"/>
+      <text x="545" y="210" font-size="12" fill="currentColor">🌙 midnight review</text>
+      <g font-size="13"><text x="545" y="232" fill="#3d7a4e">● ● ● ● ●</text><text x="635" y="232" fill="currentColor" opacity=".7">all roles green</text></g>
+      <text x="545" y="250" font-size="11" fill="currentColor" opacity=".7">findings in your inbox at 6am</text>
+    </g>
+    <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+  </svg>
+  <div class="anim-cap"><span class="t" id="cap-t"></span> <span id="cap-x">Press play.</span></div>
+</div>
+<p><button class="btn primary" id="anim-play">▶ play the sketch (45s)</button></p>
+</section>
+
+<section id="reports">
+<h2>Reports — the Kit Kat answers</h2>
+<div class="card">
+<h3>Proof of life: "can you see the chat log?"</h3>
+<p><b>No.</b> The in-session chat isn't exposed through anything the machine can read — the 18:26 "testing" message never arrived; it's known only because it was said aloud. The spoken trigger worked completely: all 8 directives were caught from the transcript. Written side-channels that <i>would</i> work: the bookmark button (untested), or typing into this repo's issues during recording. Full answer: <a target="_blank" rel="noopener" href="https://github.com/turnert1337/in-practice-machine-v1/blob/main/reports/03_proof_of_life.md">reports/03_proof_of_life.md</a></p>
+</div>
+<div class="card">
+<h3>Feed damage: "what did the mismatched feed cost us?"</h3>
+<p><b>Audio: nothing material.</b> Both sides recorded locally, so the VPN/5G trouble mostly never reached tape. Actual costs: Jeremy's reconnects split him across 3 tracks (cosmetic), one sentence lost at 39:21 (stitched per directive), crosstalk through minutes 56–75 (tightening pass), and intermittent frozen video (matters only for snippet selection). No re-record needed. Full report: <a target="_blank" rel="noopener" href="https://github.com/turnert1337/in-practice-machine-v1/blob/main/reports/02_quality_report.md">reports/02_quality_report.md</a></p>
+</div>
+<div class="card">
+<h3>Session breakdown</h3>
+<p>28 segments mapped with keep/cut calls, the full Kit Kat compliance list, and the on-tape mandates (20-min cap, scripted VO, Substack decoupling, the machine spec). <a target="_blank" rel="noopener" href="https://github.com/turnert1337/in-practice-machine-v1/blob/main/reports/01_session_breakdown.md">reports/01_session_breakdown.md</a></p>
+</div>
+<details><summary>Offered, not built (explicitly not a directive)</summary>
+<p class="muted">At 73:30 Turner floated treating the machine like software — changelog + version history in the publish receipt — and flagged it as <i>not</i> a Kit Kat-level direction. The repo gives it for free if wanted: git history is the changelog, and a <span class="mono">CHANGELOG.md</span> + percent-auto-vs-manual table can be added to the receipt next session. One issue turns it on.</p>
+</details>
+</section>
+
+<footer>
+  In Practice Machine v1 · <a href="https://github.com/turnert1337/in-practice-machine-v1" target="_blank" rel="noopener">repo</a> · machinery from session 4 lives in <span class="mono">machinery/</span> · publish stays human
+</footer>
+</div>
+
+<script>
+/* ---- recorder ---- */
+(function(){
+  let mediaRec=null, chunks=[], activeBtn=null;
+  document.querySelectorAll(".rec").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const state = btn.parentElement.querySelector(".rec-state");
+      if(mediaRec && mediaRec.state==="recording"){
+        if(btn!==activeBtn) return;
+        mediaRec.stop(); return;
+      }
+      try{
+        const stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false}});
+        const mime = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/mp4";
+        mediaRec = new MediaRecorder(stream,{mimeType:mime});
+        chunks=[]; activeBtn=btn;
+        mediaRec.ondataavailable = e=>chunks.push(e.data);
+        mediaRec.onstop = ()=>{
+          stream.getTracks().forEach(t=>t.stop());
+          const blob = new Blob(chunks,{type:mime});
+          const ext = mime.includes("webm")?"webm":"m4a";
+          const url = URL.createObjectURL(blob);
+          const old = btn.parentElement.parentElement.querySelector("audio[data-take='"+btn.dataset.take+"']");
+          if(old) old.remove();
+          const player = document.createElement("audio");
+          player.controls=true; player.src=url; player.dataset.take=btn.dataset.take;
+          btn.parentElement.insertAdjacentElement("afterend", player);
+          const dl = document.createElement("a");
+          dl.className="btn"; dl.textContent="save "+btn.dataset.take+"."+ext;
+          dl.href=url; dl.download=btn.dataset.take+"."+ext;
+          btn.parentElement.appendChild(dl);
+          btn.textContent="● re-record"; state.textContent="listen back, then save";
+        };
+        mediaRec.start();
+        btn.textContent="■ stop"; state.textContent="recording…";
+      }catch(err){ state.textContent="mic unavailable: "+err.name; }
+    });
+  });
+})();
+
+/* ---- agent HR animation ---- */
+(function(){
+  const agents = document.getElementById("g-agents");
+  const COLS=4, ROWS=5;
+  const dots=[];
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    const cx=70+c*47, cy=70+r*40;
+    const g=document.createElementNS("http://www.w3.org/2000/svg","g");
+    g.setAttribute("class","agent-dot");
+    g.innerHTML='<circle cx="'+cx+'" cy="'+cy+'" r="10" fill="none" stroke="currentColor"/><circle cx="'+cx+'" cy="'+(cy-3)+'" r="3.2" fill="currentColor"/><path d="M '+(cx-5)+' '+(cy+6)+' Q '+cx+' '+(cy-1)+' '+(cx+5)+' '+(cy+6)+'" fill="currentColor"/>';
+    agents.appendChild(g); dots.push(g);
+  }
+  const capT=document.getElementById("cap-t"), capX=document.getElementById("cap-x");
+  const steps=[
+    [0,"30:45","“Every agent in this agency needs a certain set of resources… much like a human resources department.” — Jeremy", ()=>{dots.slice(0,8).forEach((d,i)=>setTimeout(()=>d.style.opacity=1,i*220));}],
+    [4,"32:21","A centralized registry — “that could be as simple as a markdown file in that folder.”", ()=>{dots.slice(8,14).forEach((d,i)=>setTimeout(()=>d.style.opacity=1,i*220));}],
+    [10,"33:14","Charters, budgets, clarifying questions — onboarding. “With any onboarding there's also offboarding.”", ()=>{document.getElementById("g-charter").style.opacity=1;}],
+    [17,"34:03","Turner's hook: every time an agent is issued, update the org chart artifact — the one he actually clicks.", ()=>{dots.slice(14,20).forEach((d,i)=>setTimeout(()=>d.style.opacity=1,i*220));}],
+    [24,"34:34","“Another agent checks that the org chart was actually updated. Get the durability in there.”", ()=>{document.getElementById("g-verify").style.opacity=1;}],
+    [32,"36:20","“Every day at midnight, look at the logs from all the roles… you wake up to that email of findings.”", ()=>{document.getElementById("g-report").style.opacity=1;}],
+    [40,"35:26","“If you want to go fast, go alone. If you want to go far, go together.”", ()=>{}],
+  ];
+  let timers=[];
+  document.getElementById("anim-play").addEventListener("click",function(){
+    timers.forEach(clearTimeout); timers=[];
+    dots.forEach(d=>d.style.opacity=0);
+    ["g-charter","g-verify","g-report"].forEach(id=>document.getElementById(id).style.opacity=0);
+    steps.forEach(([at,t,txt,fn])=>{
+      timers.push(setTimeout(()=>{capT.textContent=t; capX.textContent=txt; fn();}, at*1000));
+    });
+    timers.push(setTimeout(()=>{this.textContent="▶ replay (45s)";},45000));
+    this.textContent="playing…";
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1636 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Podcast Machine</title>
+<style>
+  :root{
+    --ground:#FAF7F2; --panel:#FFFFFF; --panel-2:#F4EEE6;
+    --ink:#2B2420; --ink-soft:#6E6258; --ink-faint:#8C7F72;
+    --line:#EADFD2; --line-strong:#D8CBBB;
+    --accent:#C93A20; --accent-ink:#FFFFFF;
+    --good:#1A5F3B; --warn:#6D4A05; --blue:#1D4E78; --brass:#8A6D1F;
+    --c-idea-bg:#D9EAF9;  --c-idea-ink:#1D4E78;
+    --c-out-bg:#FCECC0;   --c-out-ink:#6D4A05;
+    --c-draft-bg:#FCDCD0; --c-draft-ink:#8F2C10;
+    --c-done-bg:#CFEFDD;  --c-done-ink:#1A5F3B;
+    --c-dead-bg:#E9E3DB;  --c-dead-ink:#5A5248;
+    --pip-conn:#D8CBBB; --pip-conn-done:#8FD4AE;
+    --shadow:0 2px 6px rgba(130,85,40,.06), 0 12px 30px rgba(130,85,40,.07);
+    --radius:14px;
+    --mono:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --display:"Avenir Next","Avenir",system-ui,-apple-system,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --ground:#1A1511; --panel:#241D17; --panel-2:#2C241D;
+      --ink:#F1E9DF; --ink-soft:#C2B4A5; --ink-faint:#998B7D;
+      --line:#3A3027; --line-strong:#4A3E33;
+      --accent:#F0603F; --accent-ink:#30100A;
+      --good:#A5E3C2; --warn:#F2D98B; --blue:#AED2F2; --brass:#D9BC6B;
+      --c-idea-bg:#243A50;  --c-idea-ink:#AED2F2;
+      --c-out-bg:#44390F;   --c-out-ink:#F2D98B;
+      --c-draft-bg:#4E2415; --c-draft-ink:#F6BCA6;
+      --c-done-bg:#1E4230;  --c-done-ink:#A5E3C2;
+      --c-dead-bg:#3A342C;  --c-dead-ink:#CFC4B6;
+      --pip-conn:#4A3E33; --pip-conn-done:#2E6B4C;
+      --shadow:0 2px 6px rgba(0,0,0,.35), 0 12px 30px rgba(0,0,0,.3);
+    }
+  }
+  :root[data-theme="light"]{
+    --ground:#FAF7F2; --panel:#FFFFFF; --panel-2:#F4EEE6;
+    --ink:#2B2420; --ink-soft:#6E6258; --ink-faint:#8C7F72;
+    --line:#EADFD2; --line-strong:#D8CBBB;
+    --accent:#C93A20; --accent-ink:#FFFFFF;
+    --good:#1A5F3B; --warn:#6D4A05; --blue:#1D4E78; --brass:#8A6D1F;
+    --c-idea-bg:#D9EAF9;  --c-idea-ink:#1D4E78;
+    --c-out-bg:#FCECC0;   --c-out-ink:#6D4A05;
+    --c-draft-bg:#FCDCD0; --c-draft-ink:#8F2C10;
+    --c-done-bg:#CFEFDD;  --c-done-ink:#1A5F3B;
+    --c-dead-bg:#E9E3DB;  --c-dead-ink:#5A5248;
+    --pip-conn:#D8CBBB; --pip-conn-done:#8FD4AE;
+    --shadow:0 2px 6px rgba(130,85,40,.06), 0 12px 30px rgba(130,85,40,.07);
+  }
+  :root[data-theme="dark"]{
+    --ground:#1A1511; --panel:#241D17; --panel-2:#2C241D;
+    --ink:#F1E9DF; --ink-soft:#C2B4A5; --ink-faint:#998B7D;
+    --line:#3A3027; --line-strong:#4A3E33;
+    --accent:#F0603F; --accent-ink:#30100A;
+    --good:#A5E3C2; --warn:#F2D98B; --blue:#AED2F2; --brass:#D9BC6B;
+    --c-idea-bg:#243A50;  --c-idea-ink:#AED2F2;
+    --c-out-bg:#44390F;   --c-out-ink:#F2D98B;
+    --c-draft-bg:#4E2415; --c-draft-ink:#F6BCA6;
+    --c-done-bg:#1E4230;  --c-done-ink:#A5E3C2;
+    --c-dead-bg:#3A342C;  --c-dead-ink:#CFC4B6;
+    --pip-conn:#4A3E33; --pip-conn-done:#2E6B4C;
+    --shadow:0 2px 6px rgba(0,0,0,.35), 0 12px 30px rgba(0,0,0,.3);
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0; height:100%}
+  body{background:var(--ground); color:var(--ink); font-family:var(--sans);
+    line-height:1.5; -webkit-font-smoothing:antialiased; height:100vh; overflow:hidden}
+  button{font-family:inherit}
+  .view{display:none; height:100vh; flex-direction:column}
+  .view.active{display:flex}
+
+  .bar{display:flex; align-items:center; gap:12px; padding:10px clamp(12px,2.5vw,18px);
+    flex:none; background:var(--panel); border-bottom:1px solid var(--line)}
+  .tally{display:inline-flex; align-items:center; gap:7px; font-family:var(--mono);
+    font-size:10.5px; color:var(--ink-soft);
+    padding:4px 10px 4px 8px; border:1px solid var(--line-strong); border-radius:100px; background:var(--panel-2)}
+  .dot{width:9px; height:9px; border-radius:50%; background:var(--accent); animation:pulse 2.4s ease-out infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 55%,transparent)}
+    70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
+  @media (prefers-reduced-motion:reduce){.dot{animation:none}}
+  .title{display:flex; align-items:baseline; gap:9px; margin-right:auto; min-width:0}
+  .title h1{margin:0; font-family:var(--display); font-size:15px; font-weight:700;
+    letter-spacing:-.01em; white-space:nowrap}
+  .title .sub{font-family:var(--mono); font-size:10px; color:var(--ink-faint); white-space:nowrap}
+  .icon-btn{appearance:none; border:1px solid var(--line-strong); background:var(--panel-2);
+    color:var(--ink-soft); height:30px; min-width:30px; padding:0 12px; border-radius:100px; cursor:pointer;
+    font-family:var(--display); font-weight:600; font-size:12.5px;
+    display:inline-flex; align-items:center; gap:5px; justify-content:center;
+    transition:border-color .15s,color .15s}
+  .icon-btn:hover{border-color:var(--accent); color:var(--accent)}
+  .icon-btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+  .icon-btn.solid{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
+  .icon-btn.solid:hover{filter:brightness(1.05); color:var(--accent-ink)}
+
+  .body{flex:1; overflow-y:auto; padding:clamp(12px,2vw,22px)}
+  .inner{max-width:900px; margin:0 auto}
+  .inner.wide{max-width:1100px}
+
+  h2.sec{font-family:var(--display); font-size:15px; font-weight:700; letter-spacing:-.01em;
+    color:var(--ink); margin:26px 0 12px; padding-bottom:9px; position:relative;
+    border-bottom:1px solid var(--line)}
+  h2.sec::after{content:""; position:absolute; left:0; bottom:-1px; width:46px; height:3px;
+    border-radius:3px; background:linear-gradient(90deg,var(--c-draft-bg),var(--c-idea-bg))}
+  h2.sec:first-child{margin-top:0}
+
+  /* home buttons */
+  .btngrid{display:grid; gap:10px; grid-template-columns:repeat(auto-fill,minmax(215px,1fr))}
+  .mbtn{display:flex; flex-direction:column; gap:3px; text-align:left; appearance:none; cursor:pointer;
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);
+    padding:13px 15px; color:var(--ink); text-decoration:none; transition:border-color .13s, transform .13s}
+  .mbtn:hover{border-color:var(--accent); transform:translateY(-1px)}
+  .mbtn:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+  .mbtn b{font-family:var(--display); font-size:13.5px; font-weight:700; letter-spacing:-.01em}
+  .mbtn span{font-size:11.5px; color:var(--ink-soft); line-height:1.45}
+  .mbtn.big{border:none; background:linear-gradient(135deg,var(--c-draft-bg),var(--c-out-bg));
+    box-shadow:var(--shadow)}
+  .mbtn.big b{color:var(--c-draft-ink)}
+  .mbtn.big span{color:var(--c-draft-ink); opacity:.85}
+  .mbtn .why{font-size:11px; color:var(--ink-faint); font-style:italic}
+
+  /* episode lines */
+  .epline{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    box-shadow:var(--shadow); padding:15px 17px; margin-bottom:12px}
+  .epline .toprow{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap}
+  .epline h3{margin:0; font-family:var(--display); font-size:14.5px; font-weight:700; margin-right:auto}
+  .chip{font-family:var(--sans); font-size:10.5px; font-weight:650; letter-spacing:.02em;
+    padding:4px 11px 4px 9px; border-radius:100px; flex:none;
+    display:inline-flex; align-items:center; gap:6px}
+  .chip::before{content:""; width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.65}
+  .chip.pub{background:var(--c-done-bg); color:var(--c-done-ink)}
+  .chip.rev{background:var(--c-out-bg); color:var(--c-out-ink)}
+  .chip.dead{background:var(--c-dead-bg); color:var(--c-dead-ink)}
+  .chip.idea{background:var(--c-idea-bg); color:var(--c-idea-ink)}
+  .chip.out{background:var(--c-out-bg); color:var(--c-out-ink)}
+  .chip.draft{background:var(--c-draft-bg); color:var(--c-draft-ink)}
+  .epline p{margin:7px 0 0; font-size:12.5px; color:var(--ink-soft); line-height:1.55}
+  .eplinks{display:flex; gap:7px; flex-wrap:wrap; margin-top:10px}
+  .eplinks a,.eplinks button{font-size:11.5px; text-decoration:none; color:var(--c-idea-ink);
+    border:1px solid var(--line); background:var(--panel-2); border-radius:100px; padding:5px 12px; cursor:pointer}
+  .eplinks a:hover,.eplinks button:hover{border-color:var(--accent); color:var(--accent)}
+  .spawn{margin-top:10px; font-size:12px; color:var(--ink-soft)}
+  .spawn b{color:var(--ink)}
+  .spawn a{color:var(--c-idea-ink); text-decoration:none; border-bottom:1px dotted var(--line-strong)}
+  .spawn a:hover{color:var(--accent)}
+
+  /* domino tracker: left → right, one pip per stage, connectors carry progress */
+  .track{display:flex; align-items:flex-start; margin:14px 2px 8px}
+  .node{display:flex; flex-direction:column; align-items:center; gap:6px; width:102px; flex:none}
+  .node .pip{width:20px; height:20px; border-radius:50%; border:2.5px solid var(--line-strong);
+    background:var(--panel); display:grid; place-items:center; font-size:10px; font-weight:800; color:#fff}
+  .node.done .pip{background:var(--c-done-ink); border-color:var(--c-done-ink); color:var(--c-done-bg)}
+  .node.now .pip{background:var(--accent); border-color:var(--accent);
+    box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 22%,transparent); animation:nowpulse 2.2s ease-in-out infinite}
+  @keyframes nowpulse{0%,100%{box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 22%,transparent)}
+    50%{box-shadow:0 0 0 8px color-mix(in srgb,var(--accent) 9%,transparent)}}
+  @media (prefers-reduced-motion:reduce){.node.now .pip{animation:none}}
+  .node.dead .pip{background:var(--c-dead-ink); border-color:var(--c-dead-ink); color:var(--c-dead-bg)}
+  .node small{font-family:var(--mono); font-size:9.5px; color:var(--ink-faint);
+    text-align:center; line-height:1.35}
+  .node.done small{color:var(--c-done-ink)}
+  .node.now small{color:var(--accent); font-weight:700}
+  .node.dead small{text-decoration:line-through}
+  .conn{flex:1; height:3px; background:var(--pip-conn); margin-top:8.5px; min-width:14px; border-radius:3px}
+  .conn.done{background:var(--pip-conn-done)}
+  .conn.dead{background:var(--pip-conn); opacity:.45}
+  @media (max-width:560px){.node{width:72px}}
+
+  /* desk */
+  .postrow{display:flex; align-items:center; gap:11px; background:var(--panel); border:1px solid var(--line);
+    border-radius:var(--radius); padding:12px 14px; margin-bottom:8px; cursor:pointer; box-shadow:var(--shadow);
+    transition:border-color .13s, transform .13s; appearance:none; width:100%; text-align:left; color:var(--ink)}
+  .postrow:hover{border-color:var(--accent); transform:translateY(-1px)}
+  .postrow:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+  .postrow .pt{min-width:0; flex:1}
+  .postrow b{font-family:var(--display); font-size:13.5px; font-weight:700; display:block}
+  .postrow span{font-size:11.5px; color:var(--ink-soft); display:block; line-height:1.45}
+  .postrow .src{font-family:var(--mono); font-size:9.5px; color:var(--ink-faint); flex:none}
+
+  /* drafting view */
+  .split{display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start}
+  @media (max-width:860px){.split{grid-template-columns:1fr}}
+  .pane{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    box-shadow:var(--shadow); padding:17px 19px}
+  .pane h4{margin:0 0 6px; font-family:var(--display); font-size:13px; font-weight:700; color:var(--accent)}
+  .pane h5{margin:16px 0 6px; font-family:var(--display); font-size:12.5px; font-weight:700}
+  .pane p,.pane li{font-size:12.5px; line-height:1.6; color:var(--ink)}
+  .pane ul,.pane ol{margin:4px 0; padding-left:20px}
+  .pane .quote{border-left:3px solid var(--c-out-ink); padding:7px 11px; margin:8px 0;
+    background:var(--panel-2); border-radius:0 10px 10px 0; font-size:12px; font-style:italic}
+  .pane .meta{font-family:var(--mono); font-size:10.5px; color:var(--ink-faint); margin-top:2px}
+  .pane textarea{width:100%; min-height:380px; resize:vertical; background:var(--panel-2);
+    border:1px solid var(--line-strong); border-radius:10px; color:var(--ink); padding:11px 13px;
+    font-family:var(--sans); font-size:13px; line-height:1.6}
+  .pane textarea:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
+  .stagectl{display:flex; gap:7px; flex-wrap:wrap; margin:10px 0 6px}
+  .stagectl button{font-size:11.5px; font-weight:600; border:1px solid var(--line-strong);
+    background:var(--panel-2); color:var(--ink-soft); border-radius:100px; padding:6px 14px; cursor:pointer}
+  .stagectl button.on{border-color:transparent; background:var(--c-draft-bg); color:var(--c-draft-ink); font-weight:700}
+  .stagectl button:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+  .savebar{display:flex; gap:9px; align-items:center; margin-top:11px; flex-wrap:wrap}
+  .savebar .hint{font-size:11px; color:var(--ink-faint)}
+
+  /* gauntlet receipts */
+  .g-sec{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:14px 16px; margin-bottom:12px}
+  .g-sec h3{font-family:var(--display); font-size:14px; margin:0 0 8px}
+  .g-cast{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:8px}
+  .g-cast div{border:1px solid var(--line); border-radius:8px; padding:8px 10px; font-size:12px}
+  .g-cast b{display:block; font-size:12.5px}
+  .g-pitch{border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin:8px 0}
+  .g-pitch.win{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset}
+  .g-pitch .meta{font-family:var(--mono); font-size:10.5px; color:var(--ink-faint); margin-bottom:4px}
+  .g-pitch h4{margin:0 0 5px; font-size:13.5px; font-family:var(--display)}
+  .g-pitch p{margin:4px 0; font-size:12.5px; line-height:1.55}
+  .g-q{border-left:3px solid var(--line-strong); padding:2px 10px; margin:5px 0; font-size:12px; font-style:italic; color:var(--ink-soft)}
+  .g-q small{font-style:normal; font-family:var(--mono); font-size:10px; color:var(--ink-faint)}
+  .g-tbl{width:100%; border-collapse:collapse; font-size:12px}
+  .g-tbl th,.g-tbl td{border-bottom:1px solid var(--line); padding:5px 8px; text-align:left; vertical-align:top}
+  .g-tbl th{font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-faint)}
+  .g-dec{font-weight:700}
+  .g-dec.chapter{color:var(--c-draft-ink)} .g-dec.bench{color:var(--ink-soft)} .g-dec.cut{color:var(--ink-faint)}
+  .g-note{font-size:11.5px; color:var(--ink-faint); margin-top:6px}
+
+  /* walkthrough */
+  .step{display:flex; gap:12px; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    box-shadow:var(--shadow); padding:14px 16px; margin-bottom:10px}
+  .step input[type=checkbox]{width:19px; height:19px; margin-top:2px; accent-color:var(--accent); flex:none; cursor:pointer}
+  .step .st{min-width:0}
+  .step b{font-family:var(--display); font-size:13.5px; font-weight:700; display:block; margin-bottom:3px}
+  .step p{margin:0 0 5px; font-size:12.5px; color:var(--ink-soft); line-height:1.6}
+  .step p:last-child{margin:0}
+  .step code{font-family:var(--mono); font-size:11px; background:var(--panel-2);
+    border:1px solid var(--line); border-radius:5px; padding:1px 5px}
+  .step.done{opacity:.55}
+
+
+  /* word meter */
+  .meterwrap{max-width:1100px; margin:0 auto 16px}
+  #wordmeter{padding:13px 17px}
+  .wm-row{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap}
+  .wm-count{font-family:var(--display); font-size:22px; font-weight:700; font-variant-numeric:tabular-nums}
+  .wm-label{font-size:11.5px; color:var(--ink-soft)}
+  .wm-zone{margin-left:auto; font-size:11px; font-weight:650; padding:3px 10px; border-radius:100px}
+  .wm-zone.under{background:var(--c-idea-bg); color:var(--c-idea-ink)}
+  .wm-zone.in{background:var(--c-done-bg); color:var(--c-done-ink)}
+  .wm-zone.over{background:var(--c-draft-bg); color:var(--c-draft-ink)}
+  .wm-bar{position:relative; height:10px; border-radius:100px; background:var(--panel-2);
+    border:1px solid var(--line); margin:9px 0 7px; overflow:hidden}
+  .wm-band{position:absolute; top:0; bottom:0; background:color-mix(in srgb,var(--c-done-bg) 55%,transparent)}
+  .wm-fill{position:absolute; left:0; top:0; bottom:0; border-radius:100px; transition:width .2s}
+  .wm-fill.under{background:var(--c-idea-ink)}
+  .wm-fill.in{background:var(--c-done-ink)}
+  .wm-fill.over{background:var(--c-draft-ink)}
+  .wm-tick{position:absolute; top:-2px; bottom:-2px; width:2px; background:var(--ink)}
+  .wm-why{margin:4px 0 0; font-size:11px; color:var(--ink-faint); line-height:1.5}
+
+  /* writing blocks */
+  .wblock{border:1px solid var(--line); border-radius:12px; background:var(--panel-2);
+    padding:9px 11px 11px; margin-bottom:10px}
+  .wb-head{display:flex; align-items:center; gap:9px; margin-bottom:7px}
+  .wb-label{font-family:var(--display); font-size:12px; font-weight:700}
+  .wb-label-in{flex:1; min-width:0; font-family:var(--display); font-size:12px; font-weight:700;
+    border:none; border-bottom:1px dashed var(--line-strong); background:transparent; color:var(--ink); padding:2px 0}
+  .wb-label-in:focus-visible{outline:none; border-bottom-color:var(--accent)}
+  .wb-count{margin-left:auto; font-family:var(--mono); font-size:10px; color:var(--ink-faint); font-variant-numeric:tabular-nums}
+  .wb-del{appearance:none; border:1px solid var(--line-strong); background:var(--panel); color:var(--ink-soft);
+    width:22px; height:22px; border-radius:50%; cursor:pointer; font-size:14px; line-height:1; flex:none}
+  .wb-del:hover{border-color:var(--c-draft-ink); color:var(--c-draft-ink)}
+  .wb-text{width:100%; resize:vertical; background:var(--panel); border:1px solid var(--line);
+    border-radius:8px; color:var(--ink); padding:9px 11px; font-family:var(--sans); font-size:13px; line-height:1.65}
+  .wb-text:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
+  /* rich block: contenteditable grows with the writing — no inner scroll, ever */
+  .wb-rich{min-height:4.9em; height:auto; overflow:visible; resize:none; white-space:pre-wrap;
+    overflow-wrap:anywhere; cursor:text}
+  .wb-rich.title{min-height:1.65em; font-family:var(--display); font-size:15px; font-weight:650}
+  .wb-rich:empty::before{content:attr(data-ph); color:var(--ink-faint); pointer-events:none}
+  .wb-rich b,.wb-rich strong{font-weight:750}
+  .wb-tools{display:flex; gap:4px}
+  .wb-tool{appearance:none; border:1px solid var(--line-strong); background:var(--panel); color:var(--ink-soft);
+    width:24px; height:22px; border-radius:6px; cursor:pointer; font-size:12px; line-height:1; padding:0}
+  .wb-tool:hover{color:var(--ink); border-color:var(--ink-soft)}
+  .wb-tool.on{background:var(--ink); color:var(--panel); border-color:var(--ink)}
+  /* + between blocks */
+  .wb-insert{display:flex; align-items:center; gap:8px; height:18px; margin:-4px 0 6px; opacity:.45; transition:opacity .15s}
+  .wb-insert:hover,.wb-insert:focus-within{opacity:1}
+  .wb-insert::before,.wb-insert::after{content:""; flex:1; border-top:1px dashed var(--line-strong)}
+  .wb-insert button{appearance:none; border:1px solid var(--line-strong); background:var(--panel); color:var(--ink-soft);
+    height:18px; padding:0 9px; border-radius:100px; cursor:pointer; font-size:11px; line-height:1}
+  .wb-insert button:hover{color:var(--accent); border-color:var(--accent)}
+  .disksave{font-size:11px; color:var(--ink-faint)}
+  .disksave.err{color:var(--c-draft-ink); font-weight:650}
+
+  /* feedback + plan fold */
+  .fb-empty{font-size:12.5px; color:var(--ink-soft); line-height:1.6; background:var(--panel-2);
+    border:1px dashed var(--line-strong); border-radius:10px; padding:11px 13px}
+  .fb-item{border-left:3px solid var(--c-done-ink); background:var(--panel-2);
+    border-radius:0 10px 10px 0; padding:8px 12px; margin:8px 0}
+  .fb-item b{font-family:var(--display); font-size:12px}
+  .fb-item p{margin:3px 0 0; font-size:12.5px}
+  .plan-fold{margin-top:16px; border-top:1px solid var(--line); padding-top:10px}
+  .plan-fold summary{font-family:var(--display); font-size:12.5px; font-weight:700; cursor:pointer; color:var(--ink-soft)}
+  .plan-fold summary:hover{color:var(--accent)}
+  .plan-fold[open] summary{margin-bottom:6px}
+
+
+  /* comps gate (the research minigame) */
+  .cg{border:1.5px solid var(--c-out-ink); border-radius:12px; background:var(--c-out-bg);
+    padding:11px 13px; margin-bottom:12px}
+  .cg.cg-open{border-color:var(--c-done-ink); background:var(--c-done-bg)}
+  .cg-head{display:flex; align-items:center; gap:8px}
+  .cg-head b{font-family:var(--display); font-size:12.5px; color:var(--c-out-ink)}
+  .cg.cg-open .cg-head b{color:var(--c-done-ink)}
+  .cg-progress{margin-left:auto; font-family:var(--mono); font-size:11px; font-weight:700;
+    color:var(--c-out-ink)}
+  .cg.cg-open .cg-progress{color:var(--c-done-ink)}
+  .cg-sub{margin:5px 0 8px; font-size:11.5px; color:var(--c-out-ink); line-height:1.5}
+  .cg-row{display:flex; align-items:center; gap:10px; padding:5px 0; border-top:1px solid color-mix(in srgb,var(--c-out-ink) 18%,transparent)}
+  .cg-row a{font-size:12px; font-weight:600; color:var(--c-out-ink); text-decoration:underline; min-width:0; flex:1}
+  .cg.cg-open .cg-row a, .cg-row.done a{color:var(--c-done-ink)}
+  .cg-row.done a{text-decoration:none; opacity:.75}
+  .cg-check{display:inline-flex; align-items:center; gap:5px; font-size:11px; color:var(--c-out-ink); flex:none; cursor:pointer}
+  .cg.cg-open .cg-check, .cg-row.done .cg-check{color:var(--c-done-ink)}
+  .cg-check input{accent-color:var(--c-done-ink); width:15px; height:15px; cursor:pointer}
+  .cg-check input:disabled{cursor:not-allowed}
+
+  .cg-openall{margin:2px 0 8px}
+  /* locked desk */
+  #draftzone.locked{pointer-events:none; filter:blur(2px) saturate(.6); opacity:.5; user-select:none}
+
+  .hw-meta{font-family:var(--mono); font-size:10.5px; color:var(--ink-faint); line-height:1.6; margin-top:8px}
+  .hw-todo{margin:8px 0 0; padding-left:20px}
+  .hw-todo li{font-size:12.5px; color:var(--ink); line-height:1.55; margin-bottom:3px}
+  .toast{position:fixed; bottom:18px; left:50%; transform:translateX(-50%);
+    background:var(--ink); color:var(--ground); font-size:12px; padding:9px 17px;
+    border-radius:100px; opacity:0; transition:opacity .25s; pointer-events:none; z-index:50}
+  .toast.show{opacity:1}
+  [hidden]{display:none !important}
+
+  /* ---- post view: Write (plan | your blocks | editorial rail) or Page preview ---- */
+  .inner.xwide{max-width:2300px}
+  .modebar{display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:10px}
+  .modebar button{appearance:none; border:1px solid var(--line-strong); background:var(--panel); color:var(--ink-soft);
+    font-family:var(--display); font-weight:650; font-size:12.5px; padding:6px 14px; border-radius:100px; cursor:pointer}
+  .modebar button:hover{border-color:var(--accent); color:var(--accent)}
+  .modebar button.on{background:var(--ink); color:var(--panel); border-color:var(--ink)}
+  .modehint{font-size:11px; color:var(--ink-faint); margin-left:4px}
+  .split3{grid-template-columns:minmax(260px,.75fr) minmax(420px,1.25fr) minmax(340px,1fr)}
+  @media (max-width:1450px){ .split3{grid-template-columns:minmax(0,1.25fr) minmax(320px,1fr)} .split3 > .planpane{grid-column:1/-1} }
+  @media (max-width:900px){ .split3{grid-template-columns:1fr} }
+  .flash{animation:flash 1.3s ease-out}
+  @keyframes flash{0%{box-shadow:0 0 0 3px var(--accent)}100%{box-shadow:0 0 0 0 transparent}}
+  @media (prefers-reduced-motion:reduce){.flash{animation:none; outline:2px solid var(--accent)}}
+
+  /* editorial rail */
+  .ed-ctl{padding:6px 0 9px; border-bottom:1px solid var(--line); margin-bottom:9px}
+  .ed-counts{font-size:11px; color:var(--ink-soft)}
+  .ed-btns{display:flex; gap:7px; flex-wrap:wrap; align-items:center; margin-top:6px}
+  .icon-btn:disabled{opacity:.45; cursor:default; border-color:var(--line-strong); color:var(--ink-soft)}
+  .icon-btn.solid:disabled{color:var(--accent-ink)}
+  .ed-marks{font-size:11px; color:var(--ink-soft); display:inline-flex; gap:5px; align-items:center; cursor:pointer}
+  .ed-overall{background:var(--panel-2); border:1px solid var(--line); border-radius:10px; padding:8px 12px; margin-bottom:10px}
+  .ed-overall summary{font-family:var(--display); font-weight:700; font-size:12.5px; cursor:pointer}
+  .ed-ovs{display:block; font-family:var(--sans); font-weight:500; font-size:11.5px; color:var(--ink-soft); margin:2px 0 0 14px}
+  .ed-overall[open] .ed-ovs{display:none}
+  .ed-overall p,.ed-overall li{font-size:12.5px; line-height:1.6; color:var(--ink)}
+  .ed-overall ol{padding-left:20px; margin:4px 0}
+  .ed-group{margin-top:10px}
+  .ed-gh{appearance:none; border:none; background:none; padding:0 0 4px; font-family:var(--mono); font-size:10.5px;
+    color:var(--ink-faint); cursor:pointer; text-align:left}
+  .ed-gh:hover{color:var(--accent)}
+  .edc{border:1px solid var(--line); border-left:3px solid var(--line-strong); border-radius:4px 10px 10px 4px;
+    background:var(--panel-2); padding:8px 10px; margin-bottom:6px; cursor:pointer}
+  .edc.k-typo,.edc.k-light{border-left-color:var(--c-idea-ink)}
+  .edc.k-fact{border-left-color:var(--c-draft-ink)}
+  .edc.k-editorial,.edc.k-structure{border-left-color:var(--c-out-ink)}
+  .edc.k-image{border-left-color:var(--brass)}
+  .edc.k-strength{border-left-color:var(--c-done-ink)}
+  .edc.s-accept,.edc.s-applied{background:color-mix(in srgb,var(--c-done-bg) 45%,var(--panel-2))}
+  .edc.s-reject{opacity:.55}
+  .edc.is-applied{opacity:.72}
+  .edc-top{display:flex; gap:8px; align-items:center; margin-bottom:3px}
+  .edc-kind{font-size:10px; font-weight:750; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-soft)}
+  .edc-status{font-size:10.5px; color:var(--c-done-ink); margin-left:auto}
+  .edc.is-stale .edc-status{color:var(--c-draft-ink)}
+  .edc-diff{font-size:12.5px; line-height:1.55; background:var(--panel); border:1px solid var(--line);
+    border-radius:7px; padding:5px 8px; margin:4px 0; overflow-wrap:anywhere}
+  .edc-diff .ctx{color:var(--ink-faint)}
+  .edc-diff del{color:var(--c-draft-ink); background:color-mix(in srgb,var(--c-draft-bg) 55%,transparent)}
+  .edc-diff ins{color:var(--c-done-ink); text-decoration:none; font-weight:650;
+    background:color-mix(in srgb,var(--c-done-bg) 70%,transparent)}
+  .pane .edc-why,.edc-why{margin:4px 0 6px; font-size:12px; line-height:1.55; color:var(--ink);
+    display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden}
+  .edc.open .edc-why{display:block; -webkit-line-clamp:unset}
+  .edc-more{display:none; appearance:none; border:none; background:none; padding:0; margin:-4px 0 6px;
+    font-size:11px; font-weight:650; color:var(--accent); cursor:pointer}
+  .edc.clamped .edc-more{display:inline-block}
+  .edc-act{display:flex; gap:5px; flex-wrap:wrap}
+  .edc-act button{appearance:none; border:1px solid var(--line-strong); background:var(--panel); color:var(--ink-soft);
+    font-size:11px; font-weight:650; padding:3px 10px; border-radius:100px; cursor:pointer}
+  .edc-act button:hover{border-color:var(--ink-soft); color:var(--ink)}
+  .edc-act button[data-act=accept].on{background:var(--c-done-ink); border-color:var(--c-done-ink); color:var(--c-done-bg)}
+  .edc-act button[data-act=reject].on{background:var(--c-draft-ink); border-color:var(--c-draft-ink); color:var(--c-draft-bg)}
+  .edc-act button[data-act=note].on{border-color:var(--c-out-ink); color:var(--c-out-ink)}
+  .edc-act button:disabled{opacity:.55; cursor:default}
+  .edfix{cursor:default; padding-bottom:5px}
+  .fx{border-top:1px solid var(--line); padding:3px 0}
+  .fx:first-of-type{border-top:none}
+  .fx-row{display:flex; align-items:center; gap:4px}
+  .fx-diff{flex:1; min-width:0; font-size:12px; line-height:1.45; overflow-wrap:anywhere}
+  .fx-diff .ctx{color:var(--ink-faint)}
+  .fx-diff del{color:var(--c-draft-ink); background:color-mix(in srgb,var(--c-draft-bg) 55%,transparent)}
+  .fx-diff ins{color:var(--c-done-ink); text-decoration:none; font-weight:650; background:color-mix(in srgb,var(--c-done-bg) 70%,transparent)}
+  .fx-row button{appearance:none; flex:none; width:22px; height:20px; padding:0; border:1px solid var(--line-strong);
+    background:var(--panel); color:var(--ink-soft); border-radius:6px; font-size:11px; cursor:pointer; line-height:1}
+  .fx-row button:hover{color:var(--ink); border-color:var(--ink-soft)}
+  .fx-row button[data-act=accept].on{background:var(--c-done-ink); border-color:var(--c-done-ink); color:var(--c-done-bg)}
+  .fx-row button[data-act=reject].on{background:var(--c-draft-ink); border-color:var(--c-draft-ink); color:var(--c-draft-bg)}
+  .fx.s-reject .fx-diff{opacity:.5}
+  .fx-done{flex:none; font-size:10.5px; color:var(--c-done-ink)}
+  .fx-done.stale{color:var(--c-draft-ink)}
+  .fx.is-applied .fx-diff{opacity:.6}
+  .fx-why{font-size:11.5px; line-height:1.5; color:var(--ink-soft); padding:2px 0 3px}
+  .pane textarea.edc-note,.edc-note{width:100%; min-height:0; margin-top:6px; resize:none; overflow:hidden; background:var(--panel);
+    border:1px solid var(--line-strong); border-radius:7px; color:var(--ink); padding:6px 8px;
+    font-family:var(--sans); font-size:12px; line-height:1.5}
+
+  /* page preview: the article as it will sit on Substack */
+  .pv-wrap{display:grid; grid-template-columns:minmax(0,760px) minmax(320px,460px); gap:28px;
+    justify-content:center; align-items:start}
+  @media (max-width:1150px){ .pv-wrap{grid-template-columns:minmax(0,1fr)} }
+  .pv-article{--pv-bg:#FFFFFF; --pv-ink:#1F1B18; --pv-soft:#6B6560; --pv-ins:#2E9E5B; --pv-del:#C2412D;
+    background:var(--pv-bg); color:var(--pv-ink); border:1px solid var(--line); border-radius:6px; box-shadow:var(--shadow);
+    padding:44px clamp(22px,5vw,64px) 64px; font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+    font-size:19px; line-height:1.62; min-width:0; overflow-wrap:break-word}
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .pv-article{--pv-bg:#1E1A17; --pv-ink:#EDE6DD; --pv-soft:#A99F94; --pv-ins:#6FD49B; --pv-del:#F08A73} }
+  :root[data-theme="dark"] .pv-article{--pv-bg:#1E1A17; --pv-ink:#EDE6DD; --pv-soft:#A99F94; --pv-ins:#6FD49B; --pv-del:#F08A73}
+  .pv-kicker{font-family:var(--sans); font-size:11.5px; letter-spacing:.07em; text-transform:uppercase; color:var(--pv-soft); margin-bottom:10px}
+  .pv-title{font-size:36px; line-height:1.16; margin:0 0 10px; font-weight:700; letter-spacing:-.01em}
+  .pv-sub{font-size:21px; color:var(--pv-soft); margin:0 0 20px; line-height:1.4}
+  .pv-sub.pv-suggested{font-style:italic; opacity:.6}
+  .pv-sub.pv-suggested::after{content:"  · suggested"; font-family:var(--sans); font-size:11px; font-style:normal}
+  .pv-byline{display:flex; gap:10px; align-items:center; font-family:var(--sans); font-size:13px; padding:12px 0;
+    border-top:1px solid color-mix(in srgb,var(--pv-soft) 25%,transparent); border-bottom:1px solid color-mix(in srgb,var(--pv-soft) 25%,transparent); margin-bottom:30px}
+  .pv-avatar{width:36px; height:36px; border-radius:50%; background:var(--accent); color:#fff; display:grid; place-items:center; font-weight:700; font-size:13px; flex:none}
+  .pv-byline small{display:block; color:var(--pv-soft); font-size:12px}
+  .pv-article p{margin:0 0 1.15em}
+  .pv-article b{font-weight:700}
+  .pv-h2{font-size:27px; line-height:1.25; margin:1.5em 0 .6em; font-weight:700; letter-spacing:-.005em}
+  .pv-article a{color:inherit; text-decoration:underline; text-decoration-color:color-mix(in srgb,var(--accent) 70%,transparent); text-underline-offset:3px}
+  .pv-article a.pv-rawlink{font-family:var(--sans); font-size:12px; padding:1px 8px; border:1px dashed var(--accent); border-radius:100px;
+    text-decoration:none; color:var(--accent); white-space:nowrap}
+  .pv-fig{margin:1.7em 0; text-align:center}
+  .pv-fig img{max-width:100%; height:auto; border-radius:3px; display:block; margin:0 auto}
+  .pv-fig figcaption{font-family:var(--sans); font-size:13px; color:var(--pv-soft); margin-top:8px; line-height:1.45}
+  .pv-fig.pv-suggested{opacity:.55; outline:2px dashed var(--line-strong); outline-offset:6px}
+  .pv-fig.pv-suggested figcaption::before{content:"Suggested · "; font-weight:700}
+  .pv-phbox{border:2px dashed color-mix(in srgb,var(--pv-soft) 45%,transparent); border-radius:8px; padding:46px 12px;
+    font-family:var(--sans); font-size:13px; color:var(--pv-soft)}
+  .pv-chunk{position:relative; border-radius:6px; outline:1px dashed transparent; outline-offset:10px; transition:outline-color .15s}
+  .pv-chunk:hover{outline-color:var(--line-strong)}
+  .pv-num{position:absolute; left:-46px; top:5px; font-family:var(--mono); font-size:10px; color:var(--ink-faint)}
+  @media (max-width:760px){ .pv-num{display:none} }
+  .pv-tag{position:absolute; top:-13px; right:0; z-index:2; opacity:0; appearance:none; border:1px solid var(--line-strong);
+    background:var(--panel); color:var(--ink-soft); font-family:var(--sans); font-size:11px; font-weight:650;
+    padding:2px 9px; border-radius:100px; cursor:pointer; max-width:60%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .pv-chunk:hover .pv-tag,.pv-tag:focus-visible{opacity:1}
+  .pv-tag:hover{color:var(--accent); border-color:var(--accent)}
+  @media (hover:none){ .pv-tag{opacity:.8} }
+  .pv-ghost{font-family:var(--sans); font-size:12px; color:var(--pv-soft); border:1px dashed color-mix(in srgb,var(--pv-soft) 45%,transparent);
+    border-radius:8px; padding:6px 10px; margin:0 0 1.15em; text-align:center}
+  .pv-ins{text-decoration:none; background:color-mix(in srgb,var(--pv-ins) 15%,transparent); border-bottom:2px solid var(--pv-ins)}
+  .pv-del{color:var(--pv-del); text-decoration:line-through; opacity:.8}
+  .pv-removing{opacity:.45}
+  .pv-remnote{font-family:var(--sans); font-size:11px; color:var(--pv-del); margin-bottom:4px}
+  .pv-rail{min-width:0}
+
+  .rulebox{border:none; border-radius:var(--radius); background:linear-gradient(135deg,var(--c-out-bg),var(--c-done-bg));
+    padding:13px 16px; margin-top:22px}
+  .rulebox p{margin:3px 0; font-size:11.5px; color:var(--c-out-ink)}
+  .rulebox p::before{content:"— "}
+</style>
+</head>
+<body>
+
+<div class="view active" id="view-root">
+  <div class="bar">
+    <span class="tally"><span class="dot"></span>MACHINE</span>
+    <div class="title"><h1 id="bar-title">The Jeremy/Turner Podcast Machine</h1><span class="sub" id="bar-sub">in practice · readlossy</span></div>
+    <button class="icon-btn" id="btn-back" style="display:none">← Back</button>
+  </div>
+  <div class="body"><div class="inner" id="content"></div></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="machine_data.js"></script>
+<script src="hardware_data.js"></script>
+<script>
+const M = window.MACHINE;
+const $ = sel => document.querySelector(sel);
+const content = $('#content');
+let round3 = null;   // lazy-loaded post plans
+
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),1800); }
+window.toast = toast;
+
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+/* ---------- stage persistence (operator escalations live in localStorage,
+     exported via the copy button; I fold exports back into machine_data.js) ---------- */
+function postStage(p){ return localStorage.getItem('machine.stage.'+p.id) || p.stage; }
+function setStage(id, s){ localStorage.setItem('machine.stage.'+id, s); }
+
+const STAGE_CHIP = { idea:'idea', outlining:'out', drafting:'draft', published:'pub' };
+
+/* ================= HOME ================= */
+function renderHome(){
+  $('#bar-title').textContent = 'The Jeremy/Turner Podcast Machine';
+  $('#bar-sub').textContent = 'in practice · readlossy';
+  let h = '';
+  h += `<h2 class="sec">The two flows</h2><div class="btngrid">
+    <a class="mbtn big" href="?view=podcast"><b>🎙 Podcast flow</b><span>Episodes, stage by stage. Ep 3 is in final edit/review — the walkthrough is waiting for you.</span></a>
+    <a class="mbtn big" href="?view=desk"><b>✍️ Substack desk</b><span>Every post, ideation → outlining → drafting. Three Ep-3 plans ready to lock; four ideas banked.</span></a>
+    <a class="mbtn big" href="?view=walkthrough"><b>⚑ Riverside walkthrough</b><span>The 4 remaining manual steps on Ep 3, guided — reorder, ear-check, listen, export call.</span></a>
+    <a class="mbtn big" href="?view=hardware"><b>🎚 Hardware</b><span>Mic, camera, monitor hub — status, firmware, link speeds, and the Riverside device checklist.</span></a>
+  </div>`;
+  h += `<h2 class="sec">Substack — quick links</h2><div class="btngrid">` +
+    M.quicklinks.substack.map(l=>`<a class="mbtn" href="${l.href}" target="_blank" rel="noopener"><b>${esc(l.label)}</b></a>`).join('') + `</div>`;
+  h += `<h2 class="sec">Riverside</h2><div class="btngrid">` +
+    M.quicklinks.riverside.map(l=>`<a class="mbtn" href="${l.href}" target="_blank" rel="noopener"><b>${esc(l.label)}</b></a>`).join('') + `</div>`;
+  h += `<h2 class="sec">Jeremy's links</h2><div class="btngrid">
+    <div class="mbtn" style="cursor:default"><b>Nothing on file — deliberately</b>
+    <span>I don't invent URLs. Tell me his links (Thrive Consulting site, LinkedIn, anything you send people) and I'll wire them here. Same moment is the right one to finally add him to the people list — say the word.</span></div></div>`;
+  h += `<h2 class="sec">North-star posts — check your form against these</h2><div class="btngrid">` +
+    M.quicklinks.northstars.map(l=>`<a class="mbtn" href="${l.href}" target="_blank" rel="noopener"><b>${esc(l.label)}</b><span class="why">${esc(l.why)}</span></a>`).join('') + `</div>`;
+  h += `<h2 class="sec">Other surfaces</h2><div class="btngrid">` +
+    M.quicklinks.surfaces.map(l=>`<a class="mbtn" href="${l.href}" ${/^http/.test(l.href)?'target="_blank" rel="noopener"':''}><b>${esc(l.label)}</b></a>`).join('') + `</div>`;
+  h += `<div class="rulebox">` + M.rules.map(r=>`<p>${esc(r)}</p>`).join('') + `</div>`;
+  content.innerHTML = h; content.classList.remove('wide');
+}
+
+/* ================= PODCAST FLOW ================= */
+function renderPodcast(){
+  $('#bar-title').textContent = 'Podcast flow';
+  $('#bar-sub').textContent = 'recording → processing → final edit/review → published';
+  let h = '';
+  for(const ep of M.episodes){
+    const chip = ep.stage==='published' ? '<span class="chip pub">published</span>'
+               : ep.stage==='cancelled' ? '<span class="chip dead">cancelled · data lost</span>'
+               : '<span class="chip rev">'+esc(ep.stage)+'</span>';
+    /* domino tracker: ✓ = cleared, pulsing amber = you are here, ✕ = where it died */
+    const deadAt = ep.stage==='cancelled' ? 1 : -1;   // ep2 died in processing (upload)
+    const stages = ep.stages.map((s,i)=>{
+      let cls='node', mark='';
+      if(deadAt>=0){
+        if(i<deadAt){ cls+=' done'; mark='✓'; }
+        else if(i===deadAt){ cls+=' dead'; mark='✕'; }
+        else cls+=' dead';
+      } else if(i<ep.stageIndex){ cls+=' done'; mark='✓'; }
+      else if(i===ep.stageIndex){ ep.stage==='published' ? (cls+=' done', mark='✓') : ep.stage==='shelved' ? (mark='‖') : (cls+=' now'); }   // shelved = parked here, no pulse
+      const node = `<span class="${cls}"><span class="pip">${mark}</span><small>${esc(s)}</small></span>`;
+      if(i===0) return node;
+      let ccls='conn';
+      if(deadAt>=0){ ccls += i<=deadAt ? (i<deadAt?' done':' dead') : ' dead'; }
+      else if(i<=ep.stageIndex) ccls+=' done';
+      return `<span class="${ccls}"></span>`+node;
+    }).join('');
+    const spawned = (ep.posts&&ep.posts.length)
+      ? `<div class="spawn"><b>${ep.posts.length} Substack post${ep.posts.length>1?'s':''} spawned:</b> ` +
+        ep.posts.map(pid=>{const p=M.posts.find(x=>x.id===pid);
+          return `<a href="?view=post&id=${pid}">${esc(p.title)}</a> <span style="color:var(--ink-faint)">(${postStage(p)})</span>`;}).join(' · ') + `</div>`
+      : (ep.ideaBank ? `<div class="spawn"><b>${ep.ideaBank.length} ideas banked</b> (episode lost, ideas survive): ` +
+          ep.ideaBank.map(pid=>{const p=M.posts.find(x=>x.id===pid);
+          return `<a href="?view=post&id=${pid}">${esc(p.title)}</a>`;}).join(' · ') + `</div>`
+      : `<div class="spawn"><b>0 posts spawned</b> — show notes only.</div>`);
+    const links = (ep.links||[]).map(l=> l.view
+      ? `<button onclick="location.search='?view=${l.view}'">${esc(l.label)}</button>`
+      : `<a href="${l.href}" ${/^http/.test(l.href)?'target="_blank" rel="noopener"':''}>${esc(l.label)}</a>`).join('');
+    h += `<div class="epline"><div class="toprow"><h3>${esc(ep.title)}</h3>
+      <span class="sub" style="font-family:var(--mono);font-size:10px;color:var(--ink-faint)">rec ${ep.recorded} · ${esc(ep.runtime)}</span>${chip}</div>
+      <div class="track">${stages}</div><p>${esc(ep.note)}</p>
+      ${links?`<div class="eplinks">${links}</div>`:''}${spawned}</div>`;
+  }
+  content.innerHTML = h; content.classList.remove('wide');
+}
+
+/* ================= SUBSTACK DESK ================= */
+function renderDesk(){
+  $('#bar-title').textContent = 'Substack desk';
+  $('#bar-sub').textContent = 'ideation → outlining → drafting · you write, I coach';
+  const order = {drafting:0, outlining:1, idea:2, published:3};
+  const posts = [...M.posts].sort((a,b)=>order[postStage(a)]-order[postStage(b)]);
+  let h = `<h2 class="sec">Posts</h2>`;
+  for(const p of posts){
+    const st = postStage(p);
+    h += `<button class="postrow" onclick="location.search='?view=post&id=${p.id}'">
+      <span class="chip ${STAGE_CHIP[st]||'idea'}">${esc(st)}</span>
+      <span class="pt"><b>${esc(p.title)}</b><span>${esc(p.summary)}</span></span>
+      <span class="src">${p.source==='ep3'?'← ep 3':p.source==='ep2'?'← ep 2 (lost)':'standalone'}</span></button>`;
+  }
+  h += `<h2 class="sec">New idea</h2>
+    <div class="pane"><p>Posts don't have to come from episodes. Park anything here; it lands in my next sweep and I'll register it properly (id, record, coaching panel) — then it escalates to outlining when you say so.</p>
+    <textarea id="ideabox" style="min-height:90px" placeholder="One idea per line…"></textarea>
+    <div class="savebar"><button class="icon-btn solid" id="idea-save">📋 Copy for Claude</button>
+    <span class="hint">saves locally + copies a paste-ready block</span></div></div>`;
+  h += `<h2 class="sec">Check your form</h2><div class="btngrid">` +
+    M.quicklinks.northstars.map(l=>`<a class="mbtn" href="${l.href}" target="_blank" rel="noopener"><b>${esc(l.label)}</b><span class="why">${esc(l.why)}</span></a>`).join('') + `</div>`;
+  h += `<h2 class="sec">Substack quick links</h2><div class="btngrid">` +
+    M.quicklinks.substack.map(l=>`<a class="mbtn" href="${l.href}" target="_blank" rel="noopener"><b>${esc(l.label)}</b></a>`).join('') + `</div>`;
+  content.innerHTML = h; content.classList.remove('wide');
+  const box = $('#ideabox'); box.value = localStorage.getItem('machine.ideas')||'';
+  box.oninput = ()=>localStorage.setItem('machine.ideas', box.value);
+  $('#idea-save').onclick = ()=>{ localStorage.setItem('machine.ideas', box.value);
+    navigator.clipboard.writeText('NEW POST IDEAS (from the Substack desk):\n'+box.value).then(()=>toast('Copied — paste it to me in chat')); };
+}
+
+/* ================= POST DRAFTING VIEW =================
+   Left → right: YOUR writing (blocks) → my plan + feedback.
+   Blocks persist in localStorage ('machine.blocks.<id>' as JSON [{label,text,html,fixed}])
+   AND on disk via serve.py /save → ~/PodcastDraftBackups (latest + timestamped
+   history, outside the public repo). 'machine.blocks.<id>.pre-richtext' is a
+   frozen copy from before bold/italic existed.
+   Word meter at top; target per post from machine_data targetWords (comps-informed).
+   Flow doc: 99_project_skills/01_substack_drafting_flow.md · GRIM: 02_grim_reencode.md */
+
+function countWords(s){ return (s.match(/\S+/g)||[]).length; }
+
+function shortLabel(s){
+  const cut = s.split(/[:.(]/)[0].trim();
+  return cut.length>46 ? cut.slice(0,44).trim()+'…' : (cut || 'Section');
+}
+/* Seed the writing rail from the plan: Title + Intro fixed, then one suggested
+   (removable, relabelable) block per outline beat, with the beat as the
+   placeholder hint. His words only ever go IN the boxes — hints never become text.
+   Stored blocks win once he's typed anything; an untouched seed refreshes from
+   the latest plan each open. */
+function loadBlocks(p, plan){
+  let stored = null;
+  try{
+    const raw = localStorage.getItem('machine.blocks.'+p.id);
+    if(raw){ const b = JSON.parse(raw); if(Array.isArray(b)&&b.length) stored = b; }
+  }catch(e){}
+  if(stored && stored.some(b=>b.text && b.text.trim())) return stored;
+  const seed = [
+    {label:'Title', text:'', fixed:true,
+     hint: plan&&plan.alt_titles&&plan.alt_titles.length ? 'Candidates from the plan: '+plan.alt_titles.join(' · ') : undefined},
+    {label:'Intro paragraph', text:'', fixed:true,
+     hint: plan&&plan.hook ? 'The plan\'s hook: '+plan.hook : undefined}
+  ];
+  if(plan && plan.outline && plan.outline.length){
+    plan.outline.forEach(o=>{
+      const t = typeof o==='string' ? o : (o.beat||'');
+      if(t) seed.push({label: shortLabel(t), text:'', fixed:false, hint:'Plan beat: '+t});
+    });
+  }
+  const old = localStorage.getItem('machine.notes.'+p.id);
+  if(old && old.trim()) seed.push({label:'Notes (migrated from the old box)', text:old, fixed:false});
+  return seed;
+}
+function saveBlocks(p, blocks){
+  localStorage.setItem('machine.blocks.'+p.id, JSON.stringify(blocks));
+  diskSave(p.id, blocks, 'typing');
+}
+
+/* ---- rich text (bold/italic) ----
+   Each block keeps `html` (only <b>, <i>, <br>, <div> survive sanitizing) and
+   `text` (plain, for word counts and older readers). Blocks written before rich
+   text have only `text`; they're upgraded on display, never rewritten. */
+function textToHtml(t){ return esc(t||'').replace(/\n/g,'<br>'); }
+function sanitizeRich(html){
+  const src = document.createElement('div'); src.innerHTML = html||'';
+  const out = document.createElement('div');
+  (function walk(from, to){
+    from.childNodes.forEach(n=>{
+      if(n.nodeType===3){ to.appendChild(document.createTextNode(n.nodeValue)); return; }
+      if(n.nodeType!==1) return;
+      const tag = n.tagName;
+      if(tag==='BR'){ to.appendChild(document.createElement('br')); return; }
+      let el = null;
+      if(tag==='B'||tag==='STRONG') el = document.createElement('b');
+      else if(tag==='I'||tag==='EM') el = document.createElement('i');
+      else if(tag==='DIV'||tag==='P') el = document.createElement('div');
+      else if(tag==='SPAN'){   // Chrome's style spans: keep weight/slant, drop the rest
+        const st = n.getAttribute('style')||'';
+        if(/font-weight:\s*(bold|[6-9]00)/.test(st)) el = document.createElement('b');
+        else if(/font-style:\s*italic/.test(st)) el = document.createElement('i');
+      }
+      if(el){ walk(n, el); to.appendChild(el); } else walk(n, to);
+    });
+  })(src, out);
+  return out.innerHTML;
+}
+/* html → Substack markdown (**bold**, *italic*), for feedback + GRIM exports */
+function richToMarkdown(html){
+  const box = document.createElement('div'); box.innerHTML = html||'';
+  function md(node){
+    let s = '';
+    node.childNodes.forEach((n,k)=>{
+      if(n.nodeType===3){ s += n.nodeValue; return; }
+      if(n.nodeType!==1) return;
+      const inner = md(n);
+      if(n.tagName==='BR') s += '\n';
+      else if(n.tagName==='B') s += inner.trim() ? '**'+inner+'**' : inner;
+      else if(n.tagName==='I') s += inner.trim() ? '*'+inner+'*' : inner;
+      else if(n.tagName==='DIV') s += (s && !s.endsWith('\n') ? '\n' : '') + inner + '\n';
+      else s += inner;
+    });
+    return s;
+  }
+  return md(box).replace(/\n{3,}/g,'\n\n').replace(/\s+$/,'');
+}
+function blockHtml(b){ return b.html!=null ? b.html : textToHtml(b.text); }
+
+/* ---- disk backup (serve.py /save → ~/PodcastDraftBackups, outside the repo) ---- */
+const _diskTimers = {};
+function diskStatus(msg, err){
+  const el = document.getElementById('disksave');
+  if(el){ el.textContent = msg; el.classList.toggle('err', !!err); }
+}
+function diskSave(id, payload, reason, now){
+  const send = ()=>fetch('/save', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({id, reason, payload})})
+    .then(r=>r.json())
+    .then(r=>{ if(r.ok) diskStatus('💾 saved to disk '+r.savedAt.slice(9,11)+':'+r.savedAt.slice(11,13)+':'+r.savedAt.slice(13,15));
+               else diskStatus('⚠ disk save failed: '+r.error+' (still saved in this browser)', true); })
+    .catch(()=>diskStatus('⚠ disk save unavailable — server down? (still saved in this browser)', true));
+  clearTimeout(_diskTimers[id+reason]);
+  if(now) return send();
+  _diskTimers[id+reason] = setTimeout(send, 1200);
+}
+/* last-chance flush when the pane closes or reloads */
+let _beaconPayload = null;
+window.addEventListener('pagehide', ()=>{
+  if(_beaconPayload && Array.isArray(_beaconPayload.payload) &&
+     _beaconPayload.payload.some(b=>(b.text||'').trim()))
+    navigator.sendBeacon('/save', JSON.stringify(_beaconPayload));
+});
+/* one-time frozen copy of the pre-rich-text draft, kept in this browser forever */
+function freezePreRich(id){
+  const k = 'machine.blocks.'+id, f = k+'.pre-richtext';
+  const raw = localStorage.getItem(k);
+  if(raw && !localStorage.getItem(f)) localStorage.setItem(f, raw);
+}
+
+function renderMeter(p, blocks){
+  const el = document.getElementById('wordmeter');
+  if(!el) return;
+  const words = blocks.reduce((n,b)=>n+countWords(b.text), 0);
+  const t = p.targetWords;
+  if(!t){
+    el.innerHTML = `<div class="wm-row"><b class="wm-count">${words.toLocaleString()}</b><span class="wm-label">words — no target set for this one yet (it's still an idea; escalate it and a comps-informed target gets built)</span></div>`;
+    return;
+  }
+  const [lo,hi] = t.band;
+  const pct = Math.min(100, Math.round(words / hi * 100));
+  const zone = words < lo ? 'under' : (words <= hi ? 'in' : 'over');
+  const zoneWord = zone==='under' ? `${(lo-words).toLocaleString()} to the floor` :
+                   zone==='in'    ? 'in the band' : `${(words-hi).toLocaleString()} over the ceiling — cut setup, not evidence`;
+  el.innerHTML = `
+    <div class="wm-row">
+      <b class="wm-count">${words.toLocaleString()}</b>
+      <span class="wm-label">of ${t.target.toLocaleString()} target · band ${lo.toLocaleString()}–${hi.toLocaleString()}</span>
+      <span class="wm-zone ${zone}">${zoneWord}</span>
+    </div>
+    <div class="wm-bar" role="img" aria-label="${words} of ${hi} words">
+      <span class="wm-band" style="left:${Math.round(lo/hi*100)}%; right:0"></span>
+      <span class="wm-fill ${zone}" style="width:${pct}%"></span>
+      <span class="wm-tick" style="left:${Math.round(t.target/hi*100)}%"></span>
+    </div>
+    <p class="wm-why">${esc(t.rationale)}</p>`;
+}
+
+function planHTML(p, plan){
+  let h = '';
+  if(plan){
+    h += `<p class="meta">${plan===p.planInline?'plan source: machine_data.js (staged from '+(p.research||'research')+')':'plan source: content_rounds/round3_content.json'} · ${esc(plan.size_words||'')} words target</p>`;
+    if(plan.hook) h += `<h5>The hook</h5><p>${esc(plan.hook)}</p>`;
+    if(plan.outline&&plan.outline.length) h += `<h5>Outline beats</h5><ol>`+plan.outline.map(o=>`<li>${esc(typeof o==='string'?o:(o.beat||JSON.stringify(o)))}</li>`).join('')+`</ol>`;
+    if(plan.pull_quotes&&plan.pull_quotes.length) h += `<h5>Pull-quotes (travel on their own)</h5>`+plan.pull_quotes.map(q=>`<div class="quote">${esc(typeof q==='string'?q:(q.text||''))}${q.who?`<span class="meta"> — ${esc(q.who)}${q.t?' · '+esc(q.t):''}</span>`:''}</div>`).join('');
+    if(plan.crafting) h += `<h5>Crafting direction</h5><p>${esc(plan.crafting)}</p>`;
+    if(plan.why) h += `<h5>Why this post, in full</h5><p>${esc(plan.why)}</p>`;
+    if(plan.alt_titles&&plan.alt_titles.length) h += `<h5>Alternate titles considered</h5><ul>`+plan.alt_titles.map(t=>`<li>${esc(t)}</li>`).join('')+`</ul>`;
+    /* ep4 chapter posts (2026-11-17): tape quotes, built-vs-not-built guard, audience panel, seasoning */
+    if(plan.tape_quotes&&plan.tape_quotes.length) h += `<h5>From the tape (timestamps = the published episode)</h5>`+plan.tape_quotes.map(q=>`<div class="quote">${esc(q.text)}<span class="meta"> — ${esc(q.who)} · ${esc(q.t)}${q.note?' · '+esc(q.note):''}</span></div>`).join('');
+    if(plan.built) h += `<h5>Built vs not built (keep it honest)</h5><ul>`+(plan.built.yes||[]).map(b=>`<li>✅ ${esc(b)}</li>`).join('')+(plan.built.no||[]).map(b=>`<li>⬜ ${esc(b)}</li>`).join('')+`</ul>`;
+    if(plan.audience&&plan.audience.length) h += `<h5>Audience panel (simulated readers, then the revision)</h5>`+plan.audience.map(a=>`<div class="fb-item"><b>${esc(a.reader)}</b><p><b>Lands:</b> ${esc(a.lands)}</p><p><b>Missing:</b> ${esc(a.missing)}</p><p><b>Cut:</b> ${esc(a.cut)}</p>${a.comment?`<p class="meta">Their comment: “${esc(a.comment)}”</p>`:''}</div>`).join('')+(plan.audience_changes?`<p><b>What changed in the plan because of them:</b> ${esc(plan.audience_changes)}</p>`:'');
+    if(plan.seasoning&&plan.seasoning.length) h += `<h5>Seasoning: ideas in the space to cite or argue with</h5>`+plan.seasoning.map(s=>`<div class="quote" style="font-style:normal"><a href="${s.href}" target="_blank" rel="noopener"><b>${esc(s.label)}</b></a>${s.stance?` <span class="meta">(${esc(s.stance)})</span>`:''}<br><span style="font-size:11.5px; color:var(--ink-soft)">${esc(s.why)}</span></div>`).join('');
+  } else if(p.planFrom==='round3'){
+    h += `<p>Couldn't load the round-3 plan (content_rounds/round3_content.json). The reference links below still work.</p>`;
+  } else {
+    h += `<p>${esc(p.summary)}</p><p>This one is still an idea — no plan built yet. Say "escalate ${p.id}" and I'll build the full writing plan (hook, beats, pull-quotes, crafting direction, comps-informed word target) and it moves to outlining.</p>`;
+  }
+  if(p.similar&&p.similar.length){
+    h += `<h5>Similar posts on Substack — see the terrain, then start</h5>` +
+      p.similar.map(s=>`<div class="quote" style="font-style:normal">
+        <a href="${s.href}" target="_blank" rel="noopener"><b>${esc(s.label)}</b></a><br>
+        <span style="font-size:11.5px; color:var(--ink-soft)">${esc(s.why)}</span></div>`).join('');
+  }
+  h += `<h5>Reference</h5><ul>`;
+  if(p.scaffold) h += `<li><a href="${p.scaffold}" target="_blank" rel="noopener">Scaffold draft</a> — reference only, never the deliverable. You write the post.</li>`;
+  if(p.research) h += `<li><a href="${p.research}" target="_blank" rel="noopener">Research brief</a></li>`;
+  if(p.chapterLink) h += `<li>Excerpt deep link: ${esc(p.chapterLink)}</li>`;
+  h += `<li><a href="../20_research/01_audience_response_brief.md" target="_blank" rel="noopener">Audience brief + 12-point crafting checklist</a></li></ul>`;
+  return h;
+}
+
+function feedbackHTML(p){
+  if(p.feedback && p.feedback.length){
+    return p.feedback.map(f=>`<div class="fb-item"><b>${esc(f.block)}</b><p>${esc(f.recommendation)}</p></div>`).join('');
+  }
+  return `<p class="fb-empty">No feedback round yet. Write in the blocks on the left, then hit <b>Send draft for feedback</b> below them and paste it to me in chat — I'll come back with per-block recommendations here (reasoning in full prose, your text never rewritten for you), and you decide the final post. When it's final, <b>Send to GRIM</b> ports your words verbatim into clean, Substack-ready markdown.</p>`;
+}
+
+async function renderPost(id){
+  const p = M.posts.find(x=>x.id===id);
+  if(!p){ renderDesk(); return; }
+  $('#bar-title').textContent = p.title;
+  $('#bar-sub').textContent = (p.source==='ep3'?'from episode 3':p.source==='ep2'?'idea bank · from episode 2 (lost)':p.source==='ep4'?'from public Ep 2 · A System That Builds Systems':'standalone')
+    + (p.series ? ` · part ${p.series.part} of ${p.series.of}: ${p.series.role}` : '');
+  const st = postStage(p);
+
+  let plan = null;
+  if(p.planInline){ plan = p.planInline; }
+  else if(p.planFrom==='round3'){
+    if(!round3){ try{ round3 = await (await fetch('content_rounds/round3_content.json')).json(); }catch(e){ round3=null; } }
+    plan = round3 && round3.posts.find(x=>x.id===p.planId);
+  }
+
+  const planPane = `<div class="pane planpane">
+    <h4>My side — plan &amp; feedback</h4>
+    <div id="fb-zone">${feedbackHTML(p)}</div>
+    <details class="plan-fold" open><summary>The writing plan</summary>${planHTML(p, plan)}</details>
+  </div>`;
+
+  const isMacUI = /Mac/.test(navigator.platform);
+  const draftPane = `<div class="pane" id="draftpane">
+    <h4>Your side — the draft, block by block</h4>
+    <p class="meta">${esc(p.gate||'')}</p>
+    <div id="compsgate"></div>
+    <div id="draftzone"><div id="blocks"></div>
+    <div class="savebar">
+      <button class="icon-btn" id="add-block">＋ Add section</button>
+    </div>
+    <div class="stagectl" role="group" aria-label="stage">
+      ${['idea','outlining','drafting'].map(s=>`<button data-s="${s}" class="${s===st?'on':''}">${s}</button>`).join('')}
+    </div>
+    <div class="savebar">
+      <button class="icon-btn solid" id="copy-feedback">📤 Send draft for feedback (copy)</button>
+      <button class="icon-btn" id="copy-grim">⚙ Send to GRIM (copy)</button>
+      <span class="hint">autosaves every keystroke · ${isMacUI?'⌘':'Ctrl+'}B bold · ${isMacUI?'⌘':'Ctrl+'}I italic</span>
+      <span class="disksave" id="disksave">💾 disk backup: waiting for first save…</span>
+    </div></div>
+  </div>`;
+
+  const edPane = `<div class="pane edpane" id="edpane">
+    <h4>Agentic Feedback / Editorial</h4>
+    <p class="meta">suggestions only — nothing touches your words until you click apply</p>
+    <div id="ed-rail"><p class="fb-empty">Loading the editorial round…</p></div>
+  </div>`;
+
+  content.innerHTML = `<div class="meterwrap"><div class="pane" id="wordmeter"></div>
+      <div class="modebar" role="group" aria-label="view">
+        <button data-mode="write">✍ Write</button><button data-mode="preview">📰 Page preview</button>
+        <span class="modehint" id="modehint"></span></div></div>
+    <div class="split split3" id="split">${planPane}${draftPane}${edPane}</div>
+    <div class="pv-wrap" id="preview" hidden><article class="pv-article" id="pv-article"></article><aside class="pv-rail" id="pv-rail"></aside></div>`;
+  content.classList.add('wide','xwide');
+
+  /* ---- the research gate: the writing desk stays locked until every comp
+          has been opened AND marked reviewed. Reading the terrain first is
+          how he earns the best seat to interpret the plan. ---- */
+  const comps = p.similar || [];
+  function gateState(){
+    try{ return JSON.parse(localStorage.getItem('machine.comps.'+p.id)||'{}'); }catch(e){ return {}; }
+  }
+  function gateSave(s){ localStorage.setItem('machine.comps.'+p.id, JSON.stringify(s)); }
+  function gateDone(){ return comps.every((s,i)=>gateState()['r'+i]); }
+  function renderGate(){
+    const el = $('#compsgate'); if(!el) return;
+    if(!comps.length){ el.innerHTML=''; applyLock(); return; }
+    const st = gateState();
+    const done = comps.filter((s,i)=>st['r'+i]).length;
+    const all = gateDone();
+    el.innerHTML = `<div class="cg ${all?'cg-open':''}">
+      <div class="cg-head"><span class="cg-lock">${all?'🔓':'🔒'}</span>
+        <b>${all?'Research complete — the desk is yours':'Read the terrain to unlock the desk'}</b>
+        <span class="cg-progress">${done}/${comps.length}</span></div>
+      ${all?'':'<p class="cg-sub">Open each comp, actually read it, then mark it reviewed. Having walked the terrain, you will interpret the plan better than I can summarize it.</p>'}
+      ${all?'':`<div class="cg-openall"><button class="icon-btn" id="cg-all">↗ Open all ${comps.length} in the browser</button></div>`}
+      ${comps.map((s,i)=>`<div class="cg-row ${st['r'+i]?'done':''}">
+        <a href="${s.href}" target="_blank" rel="noopener" data-open="${i}">${esc(s.label)} ↗</a>
+        <label class="cg-check"><input type="checkbox" data-rev="${i}" ${st['r'+i]?'checked':''} ${st['o'+i]||st['r'+i]?'':'disabled title="Open it first"'}> reviewed</label>
+      </div>`).join('')}
+    </div>`;
+    const allBtn = el.querySelector('#cg-all');
+    if(allBtn) allBtn.onclick = ()=>{
+      const q = comps.map(s=>'u='+encodeURIComponent(s.href)).join('&');
+      fetch('/open?'+q).then(r=>r.json()).then(r=>{
+        const s = gateState(); comps.forEach((c,i)=>s['o'+i]=true); gateSave(s);
+        renderGate();
+        toast('Opened '+r.opened+' in your browser — read, then come back and mark them reviewed');
+      }).catch(()=>{ // server without the /open endpoint: fall back to tabs here
+        comps.forEach(s=>window.open(s.href,'_blank','noopener'));
+        const s = gateState(); comps.forEach((c,i)=>s['o'+i]=true); gateSave(s);
+        renderGate();
+      });
+    };
+    el.querySelectorAll('[data-open]').forEach(a=>a.addEventListener('click', ()=>{
+      const s = gateState(); s['o'+a.dataset.open] = true; gateSave(s);
+      setTimeout(renderGate, 150);   // re-enable this row's checkbox after the tab opens
+    }));
+    el.querySelectorAll('[data-rev]').forEach(c=>c.addEventListener('change', ()=>{
+      const s = gateState(); s['r'+c.dataset.rev] = c.checked; gateSave(s);
+      const was = all; renderGate();
+      if(!was && gateDone()) toast('🔓 All comps reviewed — write it in your own voice');
+    }));
+    applyLock();
+  }
+  function applyLock(){
+    const z = $('#draftzone'); if(!z) return;
+    z.classList.toggle('locked', comps.length>0 && !gateDone());
+  }
+
+  /* ---- safety first: freeze the pre-rich-text copy, restore from disk if this
+          browser lost its copy, and snapshot whatever is here on every open ---- */
+  freezePreRich(p.id);
+  try{
+    const raw = localStorage.getItem('machine.blocks.'+p.id);
+    const local = raw ? JSON.parse(raw) : null;
+    const hasLocal = Array.isArray(local) && local.some(b=>(b.text||'').trim());
+    if(!hasLocal){
+      const r = await fetch('/draft?id='+encodeURIComponent(p.id)).then(r=>r.ok?r.json():null).catch(()=>null);
+      const disk = r && r.ok && r.doc && r.doc.payload;
+      if(Array.isArray(disk) && disk.some(b=>(b.text||'').trim())){
+        localStorage.setItem('machine.blocks.'+p.id, JSON.stringify(disk));
+        toast('Restored your draft from the disk backup ('+r.doc.savedAt+')');
+      }
+    }
+  }catch(e){}
+
+  let blocks = loadBlocks(p, plan);
+  const blocksEl = $('#blocks');
+  _beaconPayload = {id:p.id, reason:'close', payload:blocks};
+  if(blocks.some(b=>(b.text||'').trim())) diskSave(p.id, blocks, 'open', true);
+
+  const isMac = /Mac/.test(navigator.platform);
+  function drawBlocks(focusIdx){
+    const insertRow = i => `<div class="wb-insert"><button data-ins="${i}" title="Insert a new block here">＋ block</button></div>`;
+    blocksEl.innerHTML = blocks.map((b,i)=>`
+      ${i>0 ? insertRow(i) : ''}
+      <div class="wblock" data-i="${i}">
+        <div class="wb-head">
+          ${b.fixed ? `<span class="wb-label">${esc(b.label)}</span>`
+                    : `<input class="wb-label-in" value="${esc(b.label)}" aria-label="section label" placeholder="Section label…">`}
+          <span class="wb-tools" role="toolbar" aria-label="formatting">
+            <button class="wb-tool" data-cmd="bold" title="Bold (${isMac?'⌘':'Ctrl+'}B)"><b>B</b></button>
+            <button class="wb-tool" data-cmd="italic" title="Italic (${isMac?'⌘':'Ctrl+'}I)"><i>I</i></button>
+          </span>
+          <span class="wb-count">${countWords(b.text).toLocaleString()} w</span>
+          ${b.fixed ? '' : `<button class="wb-del" title="Remove section">−</button>`}
+        </div>
+        <div class="wb-text wb-rich ${b.label==='Title'?'title':''}" contenteditable="true" spellcheck="true"
+          role="textbox" aria-multiline="${b.label==='Title'?'false':'true'}" aria-label="${esc(b.label||'section')}"
+          data-ph="${b.hint ? esc(b.hint) : (b.label==='Title'?'The title — 5–13 words, concrete noun, no snowclone, no question mark…':'Your words. The plan is on the left; the writing is yours…')}">${sanitizeRich(blockHtml(b))}</div>
+      </div>`).join('') + insertRow(blocks.length);
+
+    blocksEl.querySelectorAll('.wblock').forEach(el=>{
+      const i = +el.dataset.i;
+      const ed = el.querySelector('.wb-rich');
+      const sync = ()=>{
+        // an editor emptied by deletes can keep a stray <br>; treat it as empty
+        if(!ed.innerText.trim() && !ed.querySelector('b,i')) ed.innerHTML = '';
+        blocks[i].html = sanitizeRich(ed.innerHTML);
+        blocks[i].text = ed.innerText.replace(/ /g,' ').replace(/\n$/,'');
+        saveBlocks(p, blocks);
+        _beaconPayload = {id:p.id, reason:'close', payload:blocks};
+        el.querySelector('.wb-count').textContent = countWords(blocks[i].text).toLocaleString()+' w';
+        renderMeter(p, blocks);
+        if(window._edOnInput) window._edOnInput();
+      };
+      ed.addEventListener('input', sync);
+      ed.addEventListener('keydown', e=>{
+        if(blocks[i].label==='Title' && e.key==='Enter'){ e.preventDefault(); return; }
+        const mod = isMac ? e.metaKey : e.ctrlKey;
+        if(mod && !e.shiftKey && !e.altKey && (e.key==='b'||e.key==='i')){
+          e.preventDefault();
+          document.execCommand(e.key==='b'?'bold':'italic');
+          sync(); paintTools();
+        }
+      });
+      // paste as plain text: no fonts/colors/links smuggled in from other apps
+      ed.addEventListener('paste', e=>{
+        e.preventDefault();
+        const t = (e.clipboardData||window.clipboardData).getData('text/plain');
+        document.execCommand('insertText', false, blocks[i].label==='Title' ? t.replace(/\s*\n+\s*/g,' ') : t);
+      });
+      el.querySelectorAll('.wb-tool').forEach(btn=>{
+        btn.addEventListener('mousedown', e=>e.preventDefault());   // keep the selection
+        btn.addEventListener('click', ()=>{
+          if(!ed.contains(document.getSelection().anchorNode)) ed.focus();
+          document.execCommand(btn.dataset.cmd); sync(); paintTools();
+        });
+      });
+      const lab = el.querySelector('.wb-label-in');
+      if(lab) lab.addEventListener('input', e=>{ blocks[i].label = e.target.value; saveBlocks(p, blocks); });
+      const del = el.querySelector('.wb-del');
+      if(del) del.onclick = ()=>{
+        if((blocks[i].text||'').trim() && !confirm(`Remove "${blocks[i].label||'this section'}" and its ${countWords(blocks[i].text)} words?`)) return;
+        diskSave(p.id, blocks, 'before-delete', true);   // snapshot before any removal
+        blocks.splice(i,1); saveBlocks(p, blocks); drawBlocks(); renderMeter(p, blocks);
+      };
+    });
+    blocksEl.querySelectorAll('[data-ins]').forEach(btn=>btn.onclick = ()=>addBlockAt(+btn.dataset.ins));
+    if(focusIdx!=null){
+      const lab = blocksEl.querySelector(`.wblock[data-i="${focusIdx}"] .wb-label-in`);
+      if(lab) lab.focus();
+    }
+    if(window._edRefresh) window._edRefresh();   // block indexes may have shifted
+  }
+  /* B / I buttons light up when the caret sits in bold / italic text */
+  function paintTools(){
+    const sel = document.getSelection();
+    blocksEl.querySelectorAll('.wblock').forEach(el=>{
+      const inside = sel && sel.anchorNode && el.querySelector('.wb-rich').contains(sel.anchorNode);
+      el.querySelectorAll('.wb-tool').forEach(t=>t.classList.toggle('on',
+        !!inside && document.queryCommandState(t.dataset.cmd)));
+    });
+  }
+  // one listener for the page's lifetime; it always points at the current view
+  window._paintTools = paintTools;
+  if(!window._paintBound){ window._paintBound = true;
+    document.addEventListener('selectionchange', ()=>window._paintTools && window._paintTools()); }
+  function addBlockAt(i){
+    blocks.splice(i, 0, {label:'', text:'', html:'', fixed:false});
+    saveBlocks(p, blocks); drawBlocks(i); renderMeter(p, blocks);
+  }
+  drawBlocks(); renderMeter(p, blocks); renderGate();
+
+  $('#add-block').onclick = ()=>addBlockAt(blocks.length);
+
+  content.querySelectorAll('.stagectl button').forEach(b=>{
+    b.onclick = ()=>{ setStage(p.id, b.dataset.s);
+      content.querySelectorAll('.stagectl button').forEach(x=>x.classList.toggle('on',x===b));
+      toast('Stage → '+b.dataset.s+' (saved locally — export to make it durable)'); };
+  });
+
+  function exportPayload(purpose){
+    return { purpose, post:p.id, title:p.title, stage:postStage(p),
+      target:p.targetWords||null, words: blocks.reduce((n,b)=>n+countWords(b.text),0),
+      savedAt:new Date().toISOString(),
+      // markdown carries his **bold** / *italic* exactly; text is the plain copy
+      blocks: blocks.map(b=>({label:b.label, words:countWords(b.text), text:b.text,
+                              markdown: richToMarkdown(sanitizeRich(blockHtml(b)))})),
+      // images + subtitle as laid out in the page preview (his layout notes → real figures)
+      layout: ED.doc ? { figures: ED.doc.figures||[],
+        inserts: (ED.doc.inserts||[]).filter(x=>!x.placeholder && (!x.item || edState(edItems().find(i=>i.id===x.item)||{})==='accept')),
+        subtitle: ED.doc.subtitle && edState(edItems().find(i=>i.id==='subtitle'))==='accept' ? ED.doc.subtitle.suggestion : null } : null };
+  }
+  $('#copy-feedback').onclick = ()=>{
+    navigator.clipboard.writeText('DRAFT FOR FEEDBACK ROUND ('+p.id+' — '+p.title+'). Protocol: 99_project_skills/01_substack_drafting_flow.md — per-block recommendations in full prose, never rewrite my text.\n'+JSON.stringify(exportPayload('feedback'),null,2))
+      .then(()=>toast('Copied — paste it to me in chat for the feedback round'));
+  };
+  $('#copy-grim').onclick = ()=>{
+    navigator.clipboard.writeText('GRIM — THE GREAT RE-ENCODE INTO MARKDOWN ('+p.id+' — '+p.title+'). Protocol: 99_project_skills/02_grim_reencode.md — verbatim port of my prose into Substack-ready markdown, formatting only, no rewriting.\n'+JSON.stringify(exportPayload('grim'),null,2))
+      .then(()=>toast('Copied — paste it to me (or any agent) to run GRIM'));
+  };
+
+  /* ================= EDITORIAL ROUND + PAGE PREVIEW =================
+     My suggestions: ~/PodcastDraftBackups/editorial/<id>.json (they quote his
+     unpublished text, so never in the repo). His accept/reject/notes:
+     <id>.decisions.json via /editorial-save, mirrored in localStorage.
+     Nothing here edits his blocks until he clicks "Apply accepted edits",
+     which snapshots the draft to disk first. Typo + light edits ship
+     pre-accepted (his call, 2026-10-31); editorial/fact notes start open. */
+  const ED = { doc:null, dec:{},
+    mode: localStorage.getItem('machine.mode.'+p.id) || '',
+    marks: localStorage.getItem('machine.edmarks')!=='0' };
+  const KIND_LABEL = {typo:'Typo', light:'Light edit', fact:'Fact check', editorial:'Editorial',
+    structure:'Structure', image:'Image', strength:'Working well'};
+  const escH = s => String(s).replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  let _edItems = null;
+  function edItems(){
+    if(!ED.doc) return [];
+    if(_edItems) return _edItems;
+    _edItems = ED.doc.items.slice();
+    if(ED.doc.subtitle) _edItems.unshift({id:'subtitle', block:0, label:'Title', kind:'editorial', default:'open',
+      why:'Suggested subtitle: “'+ED.doc.subtitle.suggestion+'”. '+ED.doc.subtitle.why});
+    return _edItems;
+  }
+  function edState(it){ const d = it && ED.dec[it.id]; return (d && d.state) || (it && it.default) || 'open'; }
+  function labelIndex(it){
+    const fits = k => blocks[k] && (blocks[k].label||'')===(it.label||'') &&
+      (it.op!=='deleteBlock' || (it.expect ? (blocks[k].text||'').includes(it.expect) : !(blocks[k].text||'').trim()));
+    if(fits(it.block)) return it.block;
+    const k = blocks.findIndex((b,j)=>fits(j));
+    if(k>=0) return k;
+    if(it.op==='deleteBlock') return -1;
+    return blocks[it.block] ? it.block : -1;   // relabelled block → fall back to its position
+  }
+  /* where an item lives now: {bi, status} — live (can apply) · applied · stale · info */
+  function edResolve(it){
+    if(it.edits && it.edits.length){
+      const f = it.edits[0].find, r = it.edits[0].replace;
+      const order = [it.block, ...blocks.map((_,k)=>k).filter(k=>k!==it.block)];
+      const has = s => order.find(k=>blocks[k] && (blocks[k].text||'').includes(s));
+      if(edState(it)==='applied'){ const k = has(r); return {bi: k!=null ? k : labelIndex(it), status:'applied'}; }
+      let k = has(f); if(k!=null) return {bi:k, status:'live'};
+      k = has(r);     if(k!=null) return {bi:k, status:'applied'};
+      return {bi:labelIndex(it), status:'stale'};
+    }
+    const bi = labelIndex(it);
+    if(it.op==='deleteBlock'){
+      if(edState(it)==='applied') return {bi:-1, status:'applied'};
+      return {bi, status: bi<0 ? 'stale' : 'live'};
+    }
+    return {bi, status:'info'};
+  }
+  function applicable(){
+    return edItems().filter(it=>edState(it)==='accept' && ((it.edits&&it.edits.length) || it.op==='deleteBlock')
+                              && edResolve(it).status==='live');
+  }
+  let _edSaveT;
+  function edSetDec(id, patch){
+    ED.dec[id] = Object.assign({}, ED.dec[id]||{}, patch, {at:new Date().toISOString()});
+    try{ localStorage.setItem('machine.editorial.'+p.id, JSON.stringify(ED.dec)); }catch(e){}
+    clearTimeout(_edSaveT);
+    _edSaveT = setTimeout(()=>fetch('/editorial-save', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({id:p.id, decisions:ED.dec})}).catch(()=>{}), 500);
+  }
+  async function edLoad(){
+    const r = await fetch('/editorial?id='+encodeURIComponent(p.id)).then(r=>r.ok?r.json():null).catch(()=>null);
+    if(!r || !r.ok) return false;
+    ED.doc = r.doc; _edItems = null;
+    let local = {}; try{ local = JSON.parse(localStorage.getItem('machine.editorial.'+p.id)||'{}'); }catch(e){}
+    const disk = r.decisions || {};
+    ED.dec = Object.assign({}, disk);
+    for(const [k,v] of Object.entries(local)) if(!disk[k] || (v.at||'') > (disk[k].at||'')) ED.dec[k] = v;
+    return true;
+  }
+
+  /* ---- cards ---- */
+  // shared prefix/suffix of two strings, widened to whole words → [prefixLen, suffixLen]
+  function commonEdges(a, b){
+    let s = 0; while(s<a.length && s<b.length && a[s]===b[s]) s++;
+    let e = 0; while(e<a.length-s && e<b.length-s && a[a.length-1-e]===b[b.length-1-e]) e++;
+    while(s>0 && /\S/.test(a[s-1])) s--;
+    while(e>0 && /\S/.test(a[a.length-e])) e--;
+    return [s, e];
+  }
+  function diffHtml(a, b, ctx){
+    const [s, e] = commonEdges(a, b), n = ctx || 48;
+    const pre = a.slice(0,s), suf = a.slice(a.length-e), x = a.slice(s,a.length-e), y = b.slice(s,b.length-e);
+    const clip = (t,head) => t.length>n ? (head ? t.slice(0,n)+'…' : '…'+t.slice(-n)) : t;
+    const squeeze = t => t.replace(/\S{48,}/g, w=>w.slice(0,30)+'…'+w.slice(-10));   // long URLs, display only
+    return `<span class="ctx">${escH(clip(pre,false))}</span>${x?`<del>${escH(squeeze(x))}</del>`:''}${y?`<ins>${escH(squeeze(y))}</ins>`:''}<span class="ctx">${escH(clip(suf,true))}</span>`;
+  }
+  function cardHtml(it){
+    const st = edState(it), rs = edResolve(it), d = ED.dec[it.id] || {};
+    const isEdit = !!(it.edits && it.edits.length), isDel = it.op==='deleteBlock';
+    const [yes,no] = it.kind==='strength' ? ['✓ Keep',''] : isEdit ? ['✓ Accept','✕ Reject']
+                   : isDel ? ['✓ Remove block','✕ Keep it'] : ['✓ Agree','✕ Disagree'];
+    const done = rs.status==='applied';
+    const statusTxt = done ? (isDel ? 'block removed ✓' : 'in your draft ✓')
+                    : rs.status==='stale' ? 'text changed — can’t auto-apply' : '';
+    return `<div class="edc k-${it.kind} s-${st} ${done?'is-applied':''} ${rs.status==='stale'?'is-stale':''}" data-id="${esc(it.id)}">
+      <div class="edc-top"><span class="edc-kind">${KIND_LABEL[it.kind]||esc(it.kind)}</span>${statusTxt?`<span class="edc-status">${statusTxt}</span>`:''}</div>
+      ${isEdit ? it.edits.map(e=>`<div class="edc-diff">${diffHtml(e.find, e.replace)}</div>`).join('') : ''}
+      <p class="edc-why">${esc(it.why)}</p>
+      <button class="edc-more" data-act="more">${'more ▾'}</button>
+      <div class="edc-act">
+        <button data-act="accept" class="${st==='accept'||done?'on':''}" ${done?'disabled':''}>${yes}</button>
+        ${no?`<button data-act="reject" class="${st==='reject'?'on':''}" ${done?'disabled':''}>${no}</button>`:''}
+        <button data-act="note" class="${d.note?'on':''}" title="Add your take — I read these next round">💬${d.note?' note':''}</button>
+      </div>
+      <textarea class="edc-note" rows="1" ${d.note?'':'hidden'} placeholder="Your take — I read these next round…">${esc(d.note||'')}</textarea>
+    </div>`;
+  }
+  /* typos + light edits: one compact card per block, a line per fix (the why is one click away) */
+  function fixCard(list){
+    const acc = list.filter(it=>edState(it)==='accept' || edResolve(it).status==='applied').length;
+    return `<div class="edc edfix k-typo">
+      <div class="edc-top"><span class="edc-kind">Typos &amp; light edits · ${list.length}</span><span class="edc-status">${acc} accepted</span></div>
+      ${list.map(it=>{
+        const st = edState(it), rs = edResolve(it), done = rs.status==='applied';
+        return `<div class="fx s-${st} ${done?'is-applied':''} ${rs.status==='stale'?'is-stale':''}" data-id="${esc(it.id)}">
+          <div class="fx-row"><span class="fx-diff">${it.edits.map(e=>diffHtml(e.find, e.replace, 16)).join(' · ')}</span>
+          ${done ? '<span class="fx-done">✓ in draft</span>'
+                 : rs.status==='stale' ? '<span class="fx-done stale">text changed</span>'
+                 : `<button data-act="accept" class="${st==='accept'?'on':''}" title="Accept">✓</button><button data-act="reject" class="${st==='reject'?'on':''}" title="Reject — keep your wording">✕</button>`}
+          <button data-act="why" title="Why this edit">?</button></div>
+          <div class="fx-why" hidden>${it.kind==='light'?'<b>Light edit.</b> ':''}${esc(it.why)}</div></div>`;
+      }).join('')}</div>`;
+  }
+  function autoGrow(ta){ if(ta.hidden) return; ta.style.height = 'auto'; ta.style.height = ta.scrollHeight+'px'; }
+
+  /* ---- the rail: one group per block, aligned beside it ---- */
+  function railHost(){ return ED.mode==='preview' ? $('#pv-rail') : $('#ed-rail'); }
+  function renderRail(){
+    const host = railHost(); if(!host) return;
+    if(!ED.doc){
+      host.innerHTML = `<p class="fb-empty">No editorial round for this post yet. Hit <b>Send draft for feedback</b> and paste it to me; the next round lands here, beside each block.</p>`;
+      return;
+    }
+    const items = edItems(), groups = new Map(), removed = [], lost = [];
+    items.forEach(it=>{
+      const rs = edResolve(it);
+      if(rs.bi<0) (rs.status==='applied' ? removed : lost).push(it);
+      else { if(!groups.has(rs.bi)) groups.set(rs.bi, []); groups.get(rs.bi).push(it); }
+    });
+    const count = s => items.filter(it=>it.kind!=='strength' && edState(it)===s).length;
+    const nApply = applicable().length;
+    let h = `<div class="ed-ctl">
+        <div class="ed-counts">Round ${ED.doc.round} · ${items.length} notes · <b>${count('accept')}</b> accepted · ${count('reject')} rejected · ${count('open')} open${count('applied')?` · ${count('applied')} applied`:''}</div>
+        <div class="ed-btns">
+          <button class="icon-btn solid" id="ed-apply" ${nApply?'':'disabled'}>✎ Apply accepted edits to my draft (${nApply})</button>
+          <button class="icon-btn" id="ed-copy">📤 Copy my decisions</button>
+          ${ED.mode==='preview'?`<label class="ed-marks"><input type="checkbox" id="ed-marks" ${ED.marks?'checked':''}> show edit marks</label>`:''}
+        </div></div>
+      <details class="ed-overall" ${localStorage.getItem('machine.edoverall')==='1'?'open':''}><summary>Editor’s overview — round ${ED.doc.round}${ED.doc.overallShort?`<span class="ed-ovs">${esc(ED.doc.overallShort)}</span>`:''}</summary>${ED.doc.overall||''}</details>`;
+    const isFix = it => (it.kind==='typo' || it.kind==='light') && it.edits && it.edits.length;
+    [...groups.keys()].sort((a,b)=>a-b).forEach(bi=>{
+      const g = groups.get(bi), fixes = g.filter(isFix);
+      h += `<div class="ed-group" data-bi="${bi}"><button class="ed-gh" data-goto="${bi}">§${bi} · ${esc(blocks[bi].label||'(unlabelled block)')}</button>${fixes.length?fixCard(fixes):''}${g.filter(it=>!isFix(it)).map(cardHtml).join('')}</div>`;
+    });
+    if(removed.length) h += `<div class="ed-group" data-bi="-1"><div class="ed-gh">Removed blocks</div>${removed.map(cardHtml).join('')}</div>`;
+    if(lost.length) h += `<div class="ed-group" data-bi="-1"><div class="ed-gh">Couldn’t place — that text changed or its block is gone</div>${lost.map(cardHtml).join('')}</div>`;
+    host.innerHTML = h;
+    // long notes fold to three lines; "more" appears only where something is hidden
+    host.querySelectorAll('.edc').forEach(c=>{ const w = c.querySelector('.edc-why');
+      if(w && w.scrollHeight > w.clientHeight + 2) c.classList.add('clamped'); });
+    wireRail(host);
+    alignRail();
+  }
+  function wireRail(host){
+    host.onclick = e=>{
+      const holder = e.target.closest('[data-id]'), act = e.target.closest('[data-act]');
+      const it = holder && edItems().find(x=>x.id===holder.dataset.id);
+      if(act && it){
+        const a = act.dataset.act;
+        if(a==='why'){ const w = holder.querySelector('.fx-why'); w.hidden = !w.hidden; alignRail(); return; }
+        if(a==='more'){ const o = holder.classList.toggle('open'); act.textContent = o ? 'less ▴' : 'more ▾'; alignRail(); return; }
+        if(a==='note'){
+          const ta = holder.querySelector('.edc-note'); ta.hidden = !ta.hidden;
+          if(!ta.hidden){ autoGrow(ta); ta.focus(); }
+          alignRail(); return;
+        }
+        edSetDec(it.id, {state: edState(it)===a ? 'open' : a});
+        if(ED.mode==='preview') renderPreview();
+        renderRail(); return;
+      }
+      const go = e.target.closest('[data-goto]');
+      if(go){ focusBlock(+go.dataset.goto); return; }
+      if(it && !e.target.closest('button,textarea,a,input,label')){ const bi = edResolve(it).bi; if(bi>=0) focusBlock(bi); }
+    };
+    host.querySelectorAll('.edc-note').forEach(ta=>{
+      const id = ta.closest('[data-id]').dataset.id;
+      ta.addEventListener('input', ()=>{ edSetDec(id, {note: ta.value}); autoGrow(ta); alignRail(); });
+      autoGrow(ta);
+    });
+    const ap = host.querySelector('#ed-apply'); if(ap) ap.onclick = applyAccepted;
+    host.querySelector('#ed-copy').onclick = copyDecisions;
+    const mk = host.querySelector('#ed-marks');
+    if(mk) mk.onchange = ()=>{ ED.marks = mk.checked; localStorage.setItem('machine.edmarks', mk.checked?'1':'0'); renderPreview(); };
+    const ov = host.querySelector('.ed-overall');
+    ov.addEventListener('toggle', ()=>{ localStorage.setItem('machine.edoverall', ov.open?'1':'0'); alignRail(); });
+  }
+  function anchorFor(bi){
+    return ED.mode==='preview' ? document.querySelector(`#pv-article .pv-chunk[data-bi="${bi}"]`)
+                               : blocksEl.querySelector(`.wblock[data-i="${bi}"]`);
+  }
+  /* push each group down to sit level with its block (never up — groups stack) */
+  let _alignRaf = 0;
+  function alignRail(){
+    cancelAnimationFrame(_alignRaf);
+    _alignRaf = requestAnimationFrame(()=>{
+      const host = railHost(); if(!host) return;
+      const groups = [...host.querySelectorAll('.ed-group')];
+      groups.forEach(g=>g.style.marginTop = '');
+      const first = anchorFor(0) || anchorFor(1);
+      // stacked layout (narrow pane): rail sits under the writing, so no alignment
+      if(!first || host.getBoundingClientRect().left < first.getBoundingClientRect().right - 4) return;
+      groups.forEach(g=>{
+        const bi = +g.dataset.bi, a = bi>=0 ? anchorFor(bi) : null; if(!a) return;
+        const gap = a.getBoundingClientRect().top - g.getBoundingClientRect().top;
+        if(gap > 0) g.style.marginTop = (10 + gap) + 'px';
+      });
+    });
+  }
+  function focusBlock(bi){
+    const el = anchorFor(bi); if(!el) return;
+    el.scrollIntoView({behavior:'smooth', block:'center'});
+    el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+  }
+
+  /* ---- page preview ---- */
+  // apply an edit while remembering what it replaced: … = removed, … = inserted.
+  // Finds match against the text with removed runs skipped, so edits stack like they will in the draft.
+  function markedApply(S, find, rep){
+    let clean = '', map = [], depth = 0;
+    for(let k=0; k<S.length; k++){
+      const ch = S[k];
+      if(ch===''){ depth++; continue; } if(ch===''){ depth--; continue; }
+      if(depth>0 || ch==='' || ch==='') continue;
+      map.push(k); clean += ch;
+    }
+    const i = clean.indexOf(find); if(i<0 || !find) return null;
+    // mark only the words that change, not the whole matched phrase
+    const [pre, suf] = commonEdges(find, rep);
+    const a = i + pre, b = i + find.length - suf;           // changed span in clean coords
+    const s = a < b ? map[a] : (a < map.length ? map[a] : S.length);
+    const e = a < b ? map[b-1]+1 : s;
+    return S.slice(0,s)+''+S.slice(s,e)+''+rep.slice(pre, rep.length-suf)+''+S.slice(e);
+  }
+  function markersToTags(S, marks){
+    if(marks) return S.replace(//g,'<ins class="pv-ins">').replace(//g,'</ins>')
+                      .replace(//g,'<del class="pv-del">').replace(//g,'</del>');
+    let out = '', depth = 0;
+    for(const ch of S){
+      if(ch===''){ depth++; continue; } if(ch===''){ depth--; continue; }
+      if(depth>0 || ch==='' || ch==='') continue;
+      out += ch;
+    }
+    return out;
+  }
+  // block html → paragraphs (any line break = new paragraph, like a Substack paste); inline tags reopen across breaks
+  function splitParas(html){
+    const box = document.createElement('div'); box.innerHTML = html;
+    const paras = [], stack = []; let cur = '';
+    const open = () => stack.map(t=>`<${t.tag}${t.attrs}>`).join('');
+    const close = () => stack.slice().reverse().map(t=>`</${t.tag}>`).join('');
+    const brk = () => { paras.push(cur + close()); cur = open(); };
+    (function walk(node){
+      node.childNodes.forEach(n=>{
+        if(n.nodeType===3){ n.nodeValue.split('\n').forEach((s,k)=>{ if(k) brk(); cur += esc(s); }); return; }
+        if(n.nodeType!==1) return;
+        const tag = n.tagName.toLowerCase();
+        if(tag==='br'){ brk(); return; }
+        if(tag==='div' || tag==='p'){ brk(); walk(n); brk(); return; }
+        if(['b','i','ins','del'].includes(tag)){
+          const attrs = n.className ? ` class="${n.className}"` : '';
+          stack.push({tag, attrs}); cur += `<${tag}${attrs}>`; walk(n); stack.pop(); cur += `</${tag}>`; return;
+        }
+        walk(n);
+      });
+    })(box);
+    paras.push(cur + close());
+    return paras.filter(ph=>ph.replace(/<[^>]+>/g,'').trim());
+  }
+  function linkify(h){
+    const href = u => u.replace(/"/g,'%22');
+    return h.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, (m,t,u)=>`<a href="${href(u)}" target="_blank" rel="noopener">${t}</a>`)
+            .replace(/\[(?:link\s*-\s*)?(https?:\/\/[^\]\s]+)\]/g, (m,u)=>`<a class="pv-rawlink" href="${href(u)}" target="_blank" rel="noopener" title="Bare link — inline it on your own words">🔗 link</a>`);
+  }
+  function figureHtml(f, cls){
+    if(f.placeholder || !f.src) return `<figure class="pv-fig ${cls||''}"><div class="pv-phbox">🖼 image slot</div>${f.caption?`<figcaption>${esc(f.caption)}</figcaption>`:''}</figure>`;
+    return `<figure class="pv-fig ${cls||''}"><img src="${esc(f.src)}" alt="${esc(f.alt||'')}">${f.caption?`<figcaption>${f.caption}</figcaption>`:''}</figure>`;
+  }
+  const HEAD_RE = /^\s*(?:(?:Bolded section title|Section Header|Bolded Heading)\s*:\s*)+/i;
+  const IMG_RE = /^\s*(?:\(\s*At this point, I want you to|Section image should|\[\s*Here, I want this image)/i;
+  function renderPreview(){
+    const art = $('#pv-article'); if(!art) return;
+    const figs = (ED.doc && ED.doc.figures) || [], ins = (ED.doc && ED.doc.inserts) || [];
+    const items = edItems();
+    let h = p.series ? `<div class="pv-kicker">Part ${p.series.part} of ${p.series.of} · draft preview</div>` : `<div class="pv-kicker">Draft preview</div>`;
+    blocks.forEach((b,bi)=>{
+      let S = sanitizeRich(blockHtml(b));
+      items.filter(it=>it.edits && edState(it)==='accept').forEach(it=>{
+        const rs = edResolve(it); if(rs.bi!==bi || rs.status!=='live') return;
+        let T = S;
+        for(const e of it.edits){ T = markedApply(T, escH(e.find), escH(e.replace)); if(T==null) return; }
+        S = T;
+      });
+      const html = markersToTags(S, ED.marks);
+      const del = items.find(it=>it.op==='deleteBlock' && edState(it)==='accept' && edResolve(it).bi===bi);
+      if(del && !ED.marks) return;
+      const tag = `<span class="pv-num">§${bi}</span><button class="pv-tag" data-edit="${bi}" title="Edit this block">✎ ${esc(b.label||'block')}</button>`;
+      if(b.fixed && b.label==='Title'){
+        const sub = items.find(x=>x.id==='subtitle'), subSt = sub ? edState(sub) : 'reject';
+        h += `<section class="pv-chunk" data-bi="${bi}">${tag}<h1 class="pv-title">${html.trim() ? html : '<span class="pv-ghost">Untitled</span>'}</h1>
+          ${ED.doc && ED.doc.subtitle && subSt!=='reject' ? `<p class="pv-sub ${subSt==='accept'?'':'pv-suggested'}">${esc(ED.doc.subtitle.suggestion)}</p>` : ''}
+          <div class="pv-byline"><span class="pv-avatar">TT</span><span><b>Turner Tomlinson</b><small>Draft · not published</small></span></div></section>`;
+        return;
+      }
+      const paras = splitParas(html);
+      if(!paras.length){
+        h += `<section class="pv-chunk" data-bi="${bi}">${tag}<div class="pv-ghost">empty block · ${esc(b.label||'unlabelled')} — won’t appear on the page</div></section>`;
+        return;
+      }
+      let body = '';
+      paras.forEach(ph=>{
+        const tmp = document.createElement('div'); tmp.innerHTML = ph;
+        tmp.querySelectorAll('del').forEach(d=>d.remove());
+        const plain = tmp.textContent.trim();
+        if(!plain){ body += `<p>${ph}</p>`; return; }
+        if(HEAD_RE.test(plain)){
+          const hh = ph.replace(HEAD_RE,'').replace(/^\s*(&quot;|")/,'').replace(/(&quot;|")\s*$/,'');
+          body += `<h2 class="pv-h2">${linkify(hh)}</h2>`;
+        } else if(IMG_RE.test(plain)){
+          const f = figs.find(f=>f.block===bi && plain.includes(f.match)) || figs.find(f=>plain.includes(f.match));
+          body += f ? figureHtml(f) : figureHtml({placeholder:true, caption:'Your note: '+plain});
+        } else body += `<p>${linkify(ph)}</p>`;
+        ins.filter(x=>x.block===bi && plain.includes(x.after)).forEach(x=>{
+          if(!x.item){ body += figureHtml(x); return; }
+          const s = edState(items.find(i=>i.id===x.item));
+          if(s!=='reject') body += figureHtml(x, s==='accept' ? '' : 'pv-suggested');
+        });
+      });
+      h += `<section class="pv-chunk ${del?'pv-removing':''}" data-bi="${bi}">${tag}${del?'<div class="pv-remnote">this block will be removed when you apply</div>':''}${body}</section>`;
+    });
+    art.innerHTML = h;
+    art.querySelectorAll('[data-edit]').forEach(b=>b.onclick = ()=>{ setMode('write'); focusBlock(+b.dataset.edit); });
+    art.querySelectorAll('img').forEach(im=>im.addEventListener('load', alignRail));
+    alignRail();
+  }
+
+  /* ---- applying accepted edits to HIS blocks (snapshot first, re-verify every find) ---- */
+  async function applyAccepted(){
+    const list = applicable(); if(!list.length) return;
+    const nE = list.filter(it=>it.edits).length, nD = list.filter(it=>it.op==='deleteBlock').length;
+    if(!confirm(`Apply ${nE} accepted edit${nE===1?'':'s'}${nD?` and remove ${nD} block${nD===1?'':'s'}`:''} to your draft?\n\nThe draft as it is right now is saved to disk first (~/PodcastDraftBackups/history/${p.id}/…-before-edits.json) and kept in this browser.`)) return;
+    const snap = JSON.parse(JSON.stringify(blocks));
+    try{ localStorage.setItem('machine.blocks.'+p.id+'.before-edits', JSON.stringify(snap)); }catch(e){}
+    try{ await diskSave(p.id, snap, 'before-edits', true); }catch(e){}
+    const skipped = []; let done = 0;
+    list.filter(it=>it.edits).forEach(it=>{
+      const b = blocks[edResolve(it).bi];
+      let text = b.text || '', html = b.html!=null ? sanitizeRich(b.html) : null;
+      for(const e of it.edits){
+        if(!text.includes(e.find) || (html!=null && !html.includes(escH(e.find)))){ skipped.push(it.id); return; }
+        text = text.replace(e.find, ()=>e.replace);
+        if(html!=null) html = html.replace(escH(e.find), ()=>escH(e.replace));
+      }
+      b.text = text; if(html!=null) b.html = html;
+      edSetDec(it.id, {state:'applied'}); done++;
+    });
+    list.filter(it=>it.op==='deleteBlock').map(it=>({it, bi:edResolve(it).bi}))
+      .sort((a,b)=>b.bi-a.bi).forEach(({it,bi})=>{
+        if(bi<0 || edResolve(it).status!=='live'){ skipped.push(it.id); return; }
+        blocks.splice(bi, 1); edSetDec(it.id, {state:'applied'}); done++;
+      });
+    saveBlocks(p, blocks);
+    _beaconPayload = {id:p.id, reason:'close', payload:blocks};
+    drawBlocks(); renderMeter(p, blocks);
+    if(ED.mode==='preview') renderPreview();
+    renderRail();
+    toast(`Applied ${done}${skipped.length?` · ${skipped.length} skipped (that text had changed)`:''} · snapshot saved first`);
+  }
+  function copyDecisions(){
+    const lines = edItems().map(it=>{ const d = ED.dec[it.id] || {};
+      return `${it.id} [${it.kind}] ${edState(it)}${d.note ? ' — note: '+d.note : ''}`; });
+    navigator.clipboard.writeText(`EDITORIAL DECISIONS (${p.id}, round ${ED.doc.round}) — also saved to ~/PodcastDraftBackups/editorial/${p.id}.decisions.json\n`+lines.join('\n'))
+      .then(()=>toast('Copied — or just tell me "read my editorial decisions"'));
+  }
+
+  function setMode(m){
+    ED.mode = m; try{ localStorage.setItem('machine.mode.'+p.id, m); }catch(e){}
+    $('#split').hidden = m!=='write'; $('#preview').hidden = m!=='preview';
+    content.querySelectorAll('.modebar [data-mode]').forEach(b=>b.classList.toggle('on', b.dataset.mode===m));
+    $('#modehint').textContent = m==='preview'
+      ? 'how it will sit on Substack · hover a chunk and hit ✎ to edit it · notes on the right'
+      : 'your blocks · editorial notes sit beside each one on the right';
+    const other = m==='preview' ? $('#ed-rail') : $('#pv-rail');   // one live rail at a time
+    if(other) other.innerHTML = '';
+    if(m==='preview') renderPreview();
+    renderRail();
+  }
+  content.querySelectorAll('.modebar [data-mode]').forEach(b=>b.onclick = ()=>setMode(b.dataset.mode));
+
+  let _edInT;
+  window._edOnInput = ()=>{
+    alignRail();
+    clearTimeout(_edInT);   // statuses (applied / stale) refresh once he pauses
+    _edInT = setTimeout(()=>{ const host = railHost();
+      if(ED.doc && host && !host.contains(document.activeElement)) renderRail(); }, 900);
+  };
+  window._edRefresh = ()=>{ if(ED.doc) renderRail(); };
+  window._edAlign = alignRail;
+  if(!window._edResizeBound){ window._edResizeBound = true;
+    window.addEventListener('resize', ()=>window._edAlign && window._edAlign()); }
+  try{ new ResizeObserver(()=>alignRail()).observe(blocksEl); }catch(e){}
+
+  const haveEd = await edLoad();
+  if(haveEd){
+    $('#fb-zone').innerHTML = `<div class="fb-item"><b>Round ${ED.doc.round} editorial is in</b><p>Per-block notes sit in the <b>Agentic Feedback / Editorial</b> rail, level with each block. Flip to <b>📰 Page preview</b> to see the article as it will sit on the page. Typo fixes and light edits are pre-accepted, and none of them touches your draft until you click apply.</p></div>`;
+  }
+  setMode(ED.mode || (haveEd ? 'preview' : 'write'));
+}
+
+/* ================= RIVERSIDE WALKTHROUGH (s8) ================= */
+/* ============ GAUNTLET RECEIPTS (persona round deep-dive on an episode card) ============ */
+/* Data lives OUTSIDE the repo: ~/PodcastDraftBackups/editorial/<id>.json via /editorial?id=.
+   Quotes unpublished tape, so it must never move into git. Render-only here. */
+async function renderGauntlet(id){
+  $('#bar-title').textContent = 'Gauntlet receipts';
+  $('#bar-sub').textContent = 'every pitch, every rank, and what was set aside';
+  content.innerHTML = '<p style="color:var(--ink-faint)">Loading receipts…</p>'; content.classList.add('wide');
+  const r = await fetch('/editorial?id='+encodeURIComponent(id)).then(r=>r.ok?r.json():null).catch(()=>null);
+  const d = r && r.doc;
+  if(!d){ content.innerHTML = '<div class="g-sec"><h3>No receipts yet</h3><p style="font-size:12.5px">The round data isn\'t on disk yet (editorial/'+esc(id)+'.json). It lands when the gauntlet finishes.</p></div>'; return; }
+  $('#bar-title').textContent = esc(d.title || 'Gauntlet receipts');
+  const castByKey = {}; (d.cast||[]).forEach(c=>castByKey[c.key]=c);
+  let h = `<div class="g-sec"><h3>${esc(d.headline||'Round '+(d.round||1))}</h3>
+    <p style="font-size:12.5px;line-height:1.6">${esc(d.method||'')}</p>
+    <p class="g-note">${esc(d.date||'')} · episode ${esc(d.episode||'')} · ${(d.pitches||[]).length} pitches from ${(d.cast||[]).length} personas</p></div>`;
+  if(d.assembly){
+    const a = d.assembly;
+    h += `<div class="g-sec"><h3>What got built from it</h3>
+      <p style="font-size:12.5px">${esc(a.edit||'')} · ${esc(a.runtime||'')} · ${esc(a.voice||'')}</p>
+      <table class="g-tbl"><tr><th>#</th><th>Chapter</th><th>Episode</th><th>Tape</th><th>Post</th></tr>` +
+      (a.chapters||[]).map(c=>`<tr><td>${c.n}</td><td>${esc(c.title)}</td><td style="font-family:var(--mono);font-size:10.5px">${esc(c.episodeStart)}</td><td style="font-family:var(--mono);font-size:10.5px">${esc(c.tape)}</td><td><a href="?view=post&id=${esc(c.post)}">${esc(c.post)}</a></td></tr>`).join('') +
+      `</table>${a.seams?`<p class="g-note">${esc(a.seams)}</p>`:''}</div>`;
+  }
+  h += `<div class="g-sec"><h3>The cast</h3><div class="g-cast">` +
+    (d.cast||[]).map(c=>`<div><b>${esc(c.name)}</b>${esc(c.lens||'')}</div>`).join('') + `</div></div>`;
+  if(d.borda && d.borda.table){
+    h += `<div class="g-sec"><h3>Cross-rank (Borda count — higher is better)</h3><table class="g-tbl"><tr><th>#</th><th>Pitch</th><th>From</th><th>Points</th><th>Decision</th></tr>` +
+      d.borda.table.map((row,i)=>{
+        const dec = (d.slate||[]).find(s=>s.pitchId===row.pitchId) || {};
+        const cls = /chapter/i.test(dec.decision||'') ? 'chapter' : /bench/i.test(dec.decision||'') ? 'bench' : 'cut';
+        return `<tr><td>${i+1}</td><td><a href="#${esc(row.pitchId)}">${esc(row.title)}</a></td><td>${esc((castByKey[row.persona]||{}).name||row.persona)}</td><td>${row.points}</td><td class="g-dec ${cls}">${esc(dec.decision||'—')}</td></tr>`;
+      }).join('') + `</table>${d.borda.notes?`<p class="g-note">${esc(d.borda.notes)}</p>`:''}</div>`;
+  }
+  if(d.slate){
+    h += `<div class="g-sec"><h3>The slate — what made it, what didn't, and why</h3>` +
+      d.slate.map(s=>{const p=(d.pitches||[]).find(x=>x.id===s.pitchId)||{};
+        const cls = /chapter/i.test(s.decision||'') ? 'chapter' : /bench/i.test(s.decision||'') ? 'bench' : 'cut';
+        return `<p style="font-size:12.5px;margin:6px 0"><span class="g-dec ${cls}">${esc(s.decision)}</span> — <a href="#${esc(s.pitchId)}">${esc(p.title||s.pitchId)}</a><br><span style="color:var(--ink-soft)">${esc(s.why||'')}</span></p>`;}).join('') + `</div>`;
+  }
+  h += `<div class="g-sec"><h3>Every pitch, verbatim from its persona</h3>` +
+    (d.pitches||[]).map(p=>{
+      const win = (d.slate||[]).some(s=>s.pitchId===p.id && /chapter/i.test(s.decision||''));
+      return `<div class="g-pitch${win?' win':''}" id="${esc(p.id)}">
+      <div class="meta">${esc((castByKey[p.persona]||{}).name||p.persona)} · self-rank #${p.selfRank||'—'} · snippet ${esc(p.snippet&&p.snippet.range||'—')}</div>
+      <h4>${esc(p.title)}</h4>
+      ${p.pitch?`<p>${esc(p.pitch)}</p>`:''}
+      ${p.snippet&&p.snippet.desc?`<p><b>Snippet:</b> ${esc(p.snippet.desc)}</p>`:''}
+      ${(p.quotes||[]).map(q=>`<div class="g-q">"${esc(q.text)}" <small>— ${esc(q.speaker)} ${esc(q.t)}</small></div>`).join('')}
+      </div>`;}).join('') + `</div>`;
+  if(d.alsoConsidered && d.alsoConsidered.length){
+    h += `<div class="g-sec"><h3>Also on the tape, pitched by no one</h3><table class="g-tbl"><tr><th>Segment</th><th>Tape</th><th>Why it stayed on the floor</th></tr>` +
+      d.alsoConsidered.map(a=>`<tr><td>${esc(a.segment)}</td><td style="font-family:var(--mono);font-size:10.5px">${esc(a.t)}</td><td>${esc(a.why)}</td></tr>`).join('') + `</table></div>`;
+  }
+  if(d.warnings && d.warnings.length){
+    h += `<div class="g-sec"><h3>Flags</h3>` + d.warnings.map(w=>`<p style="font-size:12.5px;margin:4px 0">⚠ ${esc(w)}</p>`).join('') + `</div>`;
+  }
+  content.innerHTML = h;
+}
+
+function renderWalkthrough(){
+  $('#bar-title').textContent = 'Riverside walkthrough — Ep 3 final edit';
+  $('#bar-sub').textContent = 'edit 6acc15f6… · rev 16 · 20:46.8';
+  const steps = [
+    { id:'w1', title:'Open the edit in Riverside',
+      body:`<p>Open <a href="https://riverside.com/dashboard/studios/turner-tomlinsons-studio/projects" target="_blank" rel="noopener">your studio projects</a> → project <b>In-Practice, Episode 3</b> → edit <b>"Ep3 Excerpts — The Cutting Room (3 chapters)"</b> (revision 16). Ignore the one called <code>reorder attempt (scratch)</code> — that's an abandoned test clone, safe to delete whenever.</p>` },
+    { id:'w2', title:'Drag the Rate Limit chapter into second position',
+      body:`<p><b>What:</b> the episode currently plays in tape order — Slop Bomb, Apple Notes, Rate Limit. Your post ranking wants Rate Limit second. On the timeline, select the Rate Limit chapter block (currently the third content block, <code>14:25–20:47</code>) and drag it to sit between Slop Bomb and Apple Notes.</p>
+      <p><b>Why you and not me:</b> Riverside's reorder API is gated off for this account, and I verified that manual clip surgery through the MCP tools would desync the synced cuts (they're pinned to absolute timeline positions, not to clips) — it could silently expose or hide the wrong seconds of tape. The web editor's drag handles do this safely in about two minutes.</p>` },
+    { id:'w3', title:'Swap the two VO handoff clips to match',
+      body:`<p>After the drag, the narrator would announce chapters in the wrong order. On the overlays track, move the <b>Rate Limit handoff</b> VO clip (11.8s, says "Chapter two: I Burned a Five-Hour Rate Limit…") into the second handoff slot, and the <b>Apple Notes handoff</b> (11.2s, "Chapter three: My 150 Apple Notes…") into the third. Both clips already exist on the timeline — this is repositioning, not re-rendering, so it costs nothing from the ElevenLabs budget.</p>` },
+    { id:'w4', title:'Ear-check one seam: the Apple Notes handoff tail',
+      body:`<p>The Apple Notes handoff VO runs <b>104 milliseconds</b> past its reserved silence window into the first breath of dialogue. That's probably imperceptible — but "probably" isn't a listen. Scrub to that handoff boundary and play across it. If you hear the narrator clip the first word of conversation, trim the VO clip's tail slightly in the editor; if it sounds clean, leave it and check this box.</p>` },
+    { id:'w5', title:'Full listen-through',
+      body:`<p>20 minutes 47 seconds, start to finish. You're the only one of us with ears. Besides overall flow, two specific things to confirm: the two chapter-break title cards were stretched past their native 10 seconds (to 11.2s and 11.8s) to fit River's pacing — confirm they don't look frozen; and the intro VO's AI-narrator disclosure should feel matter-of-fact, not apologetic.</p>` },
+    { id:'w6', title:'The export call is yours',
+      body:`<p>When it all passes: say <b>"export ep 3"</b> in chat. I run the export through the MCP, wait out the render, recompute the three Substack deep-link timestamps against the new chapter order (Slop Bomb stays 0:30, Rate Limit moves to ~6:51, Apple Notes to ~14:3x — I'll read the exact boundaries off the final timeline), and stage the Substack episode draft. Nothing publishes without your word, as always.</p>` }
+  ];
+  let h = steps.map(s=>`<div class="step" id="${s.id}">
+      <input type="checkbox" aria-label="done" ${localStorage.getItem('machine.wt.'+s.id)==='1'?'checked':''}>
+      <div class="st"><b>${esc(s.title)}</b>${s.body}</div></div>`).join('');
+  h += `<div class="savebar" style="margin-top:14px"><button class="icon-btn solid" id="wt-copy">📋 Copy progress for Claude</button>
+    <span class="hint">checkboxes persist locally</span></div>`;
+  content.innerHTML = h; content.classList.remove('wide');
+  content.querySelectorAll('.step').forEach(el=>{
+    const cb = el.querySelector('input'); const sync=()=>el.classList.toggle('done',cb.checked);
+    sync();
+    cb.onchange = ()=>{ localStorage.setItem('machine.wt.'+el.id, cb.checked?'1':'0'); sync(); };
+  });
+  $('#wt-copy').onclick = ()=>{
+    const state = steps.map(s=>s.id+': '+(localStorage.getItem('machine.wt.'+s.id)==='1'?'done':'open')).join('\n');
+    navigator.clipboard.writeText('RIVERSIDE WALKTHROUGH PROGRESS (ep3):\n'+state).then(()=>toast('Copied — paste it to me in chat'));
+  };
+}
+
+/* ================= HARDWARE ================= */
+function renderHardware(){
+  const H = window.HARDWARE;
+  $('#bar-title').textContent = 'Hardware';
+  $('#bar-sub').textContent = 'last probe ' + (H ? H.lastProbe : '—');
+  if(!H){ content.innerHTML = '<div class="pane"><p>hardware_data.js did not load.</p></div>'; return; }
+  const chip = { ready:'<span class="chip pub">ready</span>', attention:'<span class="chip out">needs attention</span>', warning:'<span class="chip draft">watch out</span>' };
+  let h = `<h2 class="sec">Devices</h2>`;
+  for(const d of H.devices){
+    h += `<div class="epline"><div class="toprow"><h3>${esc(d.name)}</h3>${chip[d.status]||''}</div>
+      <p><b>${esc(d.role)}</b></p>
+      <p>${esc(d.verdict)}</p>
+      <p class="hw-meta">Path: ${esc(d.path)}<br>Firmware: ${esc(d.firmware)}<br>Link: ${esc(d.link)}</p>
+      ${d.todo&&d.todo.length?`<ul class="hw-todo">${d.todo.map(t=>`<li>${esc(t)}</li>`).join('')}</ul>`:''}</div>`;
+  }
+  h += `<h2 class="sec">Riverside device setup — every session</h2>` +
+    H.riversideSetup.map((s,i)=>`<div class="step"><div class="st"><b>Step ${i+1}</b><p>${esc(s)}</p></div></div>`).join('');
+  h += `<h2 class="sec">Probe history</h2>` + H.checks.map(c=>`<div class="epline"><div class="toprow"><h3>${esc(c.date)}</h3></div>
+      <p>${esc(c.summary)}</p><ul class="hw-todo">${c.results.map(r=>`<li>${esc(r)}</li>`).join('')}</ul></div>`).join('');
+  h += `<p class="hw-meta">Host: ${esc(H.host)} · re-probe recipe: 99_project_skills/03_hardware_check.md</p>`;
+  content.innerHTML = h; content.classList.remove('wide');
+}
+
+/* ================= ROUTER ================= */
+function route(){
+  const q = new URLSearchParams(location.search);
+  const v = q.get('view')||'home';
+  $('#btn-back').style.display = v==='home'?'none':'inline-flex';
+  try{
+    if(v==='podcast') renderPodcast();
+    else if(v==='desk') renderDesk();
+    else if(v==='post') renderPost(q.get('id'));
+    else if(v==='walkthrough') renderWalkthrough();
+    else if(v==='ep4gauntlet') renderGauntlet('ep4gauntlet');
+    else if(v==='hardware') renderHardware();
+    else renderHome();
+  }catch(e){ renderHome(); }
+}
+$('#btn-back').onclick = ()=>{
+  const q = new URLSearchParams(location.search);
+  location.search = q.get('view')==='post' ? '?view=desk' : '';
+};
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && location.search) location.search=''; });
+route();
+</script>
+</body>
+</html>
