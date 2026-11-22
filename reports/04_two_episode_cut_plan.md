@@ -1,5 +1,11 @@
 # Two-episode cut plan — ~20 minutes each
 
+> **Applied in Riverside 2026-11-22** (chapter-level, v1 — fine trims pending Turner's review):
+> - Episode A → edit `6b032e2af1809da34f455045` · 21:27 · [preview](https://riverside.com/editor/fdeb3d50-6a2e-44c8-8e91-a4f9f5efdb2e/6b032e2af1809da34f455045/preview)
+> - Episode B → edit `6b032e2bca1a5b351b79ddaa` · 24:27 · [preview](https://riverside.com/editor/fdeb3d50-6a2e-44c8-8e91-a4f9f5efdb2e/6b032e2bca1a5b351b79ddaa/preview)
+> - Snippet 13 (12,000-subagent study) → edit `6b032e2c5d657936b202b176` · 1:55
+> - Snippet 14 (slag) → edit `6b032e2cca1a5b351b79ddae` · 0:29
+
 Per the on-tape mandate (59:36–60:20): cap at 20 minutes, one session = two weeks of podcasts. Times are raw-session transcript times; they shift once cuts are applied in Riverside. Scripted intro/bridges (Turner reads them — see `scripts/`) add ~1.5 min per episode including music.
 
 ## Episode A — working title: "An Army of PhD Interns"
